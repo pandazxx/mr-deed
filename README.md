@@ -1,7 +1,3 @@
-<div align="center">
-<a href="https://pandazxx.github.io/mr-deed/latest/"><img src="https://github.com/pandazxx/mr-deed/raw/main/docs/assets/mini-swe-agent-banner.svg" alt="mr-deed banner" style="height: 7em"/></a>
-</div>
-
 # The minimal AI software engineering agent
 
 > mr-deed is a fork of [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent), built by the SWE-agent team at Princeton & Stanford. All credit for the original design, research, and implementation goes to them — see [Attribution](#attribution) below.
