@@ -2,19 +2,21 @@ import json
 import logging
 import os
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any, Literal
 
 import litellm
 from pydantic import BaseModel
 
+from mr_deed import Tool
 from mr_deed.exceptions import FormatError
 from mr_deed.models import GLOBAL_MODEL_STATS
 from mr_deed.models.utils.actions_toolcall import (
     BASH_TOOL,
     format_toolcall_observation_messages,
     parse_toolcall_actions,
+    tool_schema,
 )
 from mr_deed.models.utils.anthropic_utils import _reorder_anthropic_thinking_blocks
 from mr_deed.models.utils.cache_control import set_cache_control
@@ -61,12 +63,12 @@ class LitellmModel:
         if self.config.litellm_model_registry and Path(self.config.litellm_model_registry).is_file():
             litellm.utils.register_model(json.loads(Path(self.config.litellm_model_registry).read_text()))
 
-    def _query(self, messages: list[dict[str, str]], **kwargs):
+    def _query(self, messages: list[dict[str, str]], tools: Sequence[Tool] = (), **kwargs):
         try:
             return litellm.completion(
                 model=self.config.model_name,
                 messages=messages,
-                tools=[BASH_TOOL],
+                tools=[BASH_TOOL, *map(tool_schema, tools)],
                 **(self.config.model_kwargs | kwargs),
             )
         except litellm.exceptions.AuthenticationError as e:
@@ -78,15 +80,15 @@ class LitellmModel:
         prepared = _reorder_anthropic_thinking_blocks(prepared)
         return set_cache_control(prepared, mode=self.config.set_cache_control)
 
-    def query(self, messages: list[dict[str, str]], **kwargs) -> dict:
+    def query(self, messages: list[dict[str, str]], *, tools: Sequence[Tool] = (), **kwargs) -> dict:
         for attempt in retry(logger=logger, abort_exceptions=self.abort_exceptions):
             with attempt:
-                response = self._query(self._prepare_messages_for_api(messages), **kwargs)
+                response = self._query(self._prepare_messages_for_api(messages), tools=tools, **kwargs)
         cost_output = self._calculate_cost(response)
         GLOBAL_MODEL_STATS.add(cost_output["cost"])
         # Note: all model.query() implementations must persist the response and cost on FormatError.
         try:
-            actions = self._parse_actions(response)
+            actions = self._parse_actions(response, tools)
         except FormatError as e:
             e.messages[0]["extra"].update(cost_output)
             try:
@@ -125,13 +127,14 @@ class LitellmModel:
                 raise RuntimeError(msg) from e
         return {"cost": cost}
 
-    def _parse_actions(self, response) -> list[dict]:
+    def _parse_actions(self, response, tools: Sequence[Tool] = ()) -> list[dict]:
         """Parse tool calls from the response. Raises FormatError if unknown tool."""
         tool_calls = response.choices[0].message.tool_calls or []
         return parse_toolcall_actions(
             tool_calls,
             format_error_template=self.config.format_error_template,
             template_kwargs={"finish_reason": response.choices[0].finish_reason},
+            tools=tools,
         )
 
     def format_message(self, **kwargs) -> dict:

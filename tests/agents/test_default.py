@@ -349,8 +349,8 @@ def test_message_history_tracking(model_factory):
     assert info["exit_status"] == "Submitted"
     assert info["submission"] == "done\n"
 
-    # Should have 6 messages: system, user, assistant, observation, assistant, exit
-    assert len(agent.messages) == 6
+    # Should have 7 messages: system, user, assistant, observation, assistant, observation (of the submission), exit
+    assert len(agent.messages) == 7
     # First two are system and user
     assert get_text(agent.messages[0])  # system has content
     assert get_text(agent.messages[1])  # user has content
@@ -360,6 +360,10 @@ def test_message_history_tracking(model_factory):
     assert is_observation_message(agent.messages[3])
     # Fifth is assistant response
     assert is_assistant_message(agent.messages[4])
+    # The submission gets a real observation so a continued conversation has no dangling tool call
+    assert is_observation_message(agent.messages[5])
+    assert "done" in get_observation_text(agent.messages[5])
+    assert agent.messages[6]["role"] == "exit"
 
 
 def test_step_adds_messages(model_factory):
@@ -402,9 +406,10 @@ def test_observations_captured(model_factory):
 
     agent.run("Multi-step task")
     observations = [get_observation_text(msg) for msg in agent.messages if is_observation_message(msg)]
-    assert len(observations) == 2
+    assert len(observations) == 3
     assert "first" in observations[0]
     assert "second" in observations[1]
+    assert "done" in observations[2]
 
 
 def test_wall_time_limit_enforcement(model_factory):

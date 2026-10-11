@@ -3,6 +3,7 @@ import shlex
 import signal
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 from unittest.mock import patch
@@ -262,3 +263,13 @@ def test_local_environment_shell_features():
     result = env.execute({"command": "echo $(echo 'nested')"})
     assert result["returncode"] == 0
     assert "nested" in result["output"]
+
+
+def test_interrupt_kills_the_running_command_from_another_thread():
+    env = LocalEnvironment(timeout=60)
+    threading.Timer(0.5, env.interrupt).start()
+    start = time.time()
+    result = env.execute({"command": "sleep 30; echo done"})
+    assert time.time() - start < 10
+    assert (result["returncode"], result["output"], result["exception_info"]) == (-signal.SIGKILL, "", "")
+    env.interrupt()  # nothing is running: no-op

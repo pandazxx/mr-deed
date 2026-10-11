@@ -931,11 +931,10 @@ def test_time_exceeded_never_prompts(model_factory):
     (which would otherwise loop forever)."""
     factory, config = model_factory
     agent = InteractiveAgent(
-        model=factory([("Step 1", [{"command": "echo 'first step'"}])]),
+        model=factory([("Step 1", [{"command": "sleep 2"}]), ("Step 2", [{"command": "echo 'unreachable'"}])]),
         env=LocalEnvironment(),
         **{**config, "step_limit": 10, "cost_limit": 100.0, "wall_time_limit_seconds": 1, "mode": "yolo"},
     )
-    agent._start_time = 0  # force the wall-clock budget to be already exhausted
 
     with patch.object(InteractiveAgent, "_stdin_is_interactive", return_value=True):
         with patch("builtins.input", side_effect=AssertionError("input() must not be called")) as mock_in:
@@ -943,7 +942,7 @@ def test_time_exceeded_never_prompts(model_factory):
                 info = agent.run("Test time-exceeded clean stop")
 
     assert info["exit_status"] == "TimeExceeded"
-    assert agent.n_calls == 0  # limit tripped before any model call
+    assert agent.n_calls == 1  # the slow first step exhausted the budget before the second model call
     mock_in.assert_not_called()
 
 

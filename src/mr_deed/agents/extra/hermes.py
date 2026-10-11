@@ -25,13 +25,13 @@ _DEFAULT_STYLE = ("SWE-agent", "green", ">")
 
 
 class HermesAgent(DefaultAgent):
-    def add_messages(self, *messages: dict) -> list[dict]:
+    def add_messages(self, *messages: dict, **kwargs) -> list[dict]:
         for msg in messages:
             role = msg.get("role") or msg.get("type", "unknown")
             label, color, arrow = _ROLE_STYLES.get(role, _DEFAULT_STYLE)
             console.print(f"[{color}]{arrow} {label}[/{color}]: ", end="")
             console.print(get_content_string(msg), markup=False, highlight=False)
-        return super().add_messages(*messages)
+        return super().add_messages(*messages, **kwargs)
 
     def execute_actions(self, message: dict) -> list[dict]:
         output_file = Path(self.extra_template_vars.get("work_llm_output_file") or "/dev/null")

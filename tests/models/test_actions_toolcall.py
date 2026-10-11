@@ -2,12 +2,31 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from mr_deed import Tool
 from mr_deed.exceptions import FormatError
 from mr_deed.models.utils.actions_toolcall import (
     BASH_TOOL,
     format_toolcall_observation_messages,
     parse_toolcall_actions,
+    tool_schema,
 )
+from mr_deed.models.utils.actions_toolcall_response import parse_toolcall_actions_response
+from mr_deed.models.utils.actions_toolcall_response import tool_schema as response_tool_schema
+
+ADD_TOOL = Tool(
+    "add",
+    "Add two numbers",
+    {"type": "object", "properties": {"a": {"type": "integer"}, "b": {"type": "integer"}}, "required": ["a", "b"]},
+    lambda args: {"output": str(args["a"] + args["b"])},
+)
+
+
+def _tool_call(name: str, arguments: str, call_id: str = "call_1"):
+    tool_call = MagicMock()
+    tool_call.function.name = name
+    tool_call.function.arguments = arguments
+    tool_call.id = call_id
+    return tool_call
 
 
 class TestParseToolcallActions:
@@ -42,7 +61,7 @@ class TestParseToolcallActions:
         tool_call.function.arguments = '{"command": "echo hello"}'
         tool_call.id = "call_123"
         assert parse_toolcall_actions([tool_call], format_error_template="{{ error }}") == [
-            {"command": "echo hello", "tool_call_id": "call_123"}
+            {"name": "bash", "command": "echo hello", "tool_call_id": "call_123"}
         ]
 
     def test_multiple_valid_tool_calls(self):
@@ -55,8 +74,8 @@ class TestParseToolcallActions:
             calls.append(tc)
         result = parse_toolcall_actions(calls, format_error_template="{{ error }}")
         assert len(result) == 3
-        assert result[0] == {"command": "cmd0", "tool_call_id": "call_0"}
-        assert result[2] == {"command": "cmd2", "tool_call_id": "call_2"}
+        assert result[0] == {"name": "bash", "command": "cmd0", "tool_call_id": "call_0"}
+        assert result[2] == {"name": "bash", "command": "cmd2", "tool_call_id": "call_2"}
 
     def test_unknown_tool_raises_format_error(self):
         tool_call = MagicMock()
@@ -141,3 +160,50 @@ class TestBashTool:
         assert BASH_TOOL["function"]["name"] == "bash"
         assert "command" in BASH_TOOL["function"]["parameters"]["properties"]
         assert "command" in BASH_TOOL["function"]["parameters"]["required"]
+
+
+class TestHostTools:
+    def test_tool_schemas(self):
+        assert tool_schema(ADD_TOOL) == {
+            "type": "function",
+            "function": {"name": "add", "description": "Add two numbers", "parameters": ADD_TOOL.parameters},
+        }
+        assert response_tool_schema(ADD_TOOL) == {
+            "type": "function",
+            "name": "add",
+            "description": "Add two numbers",
+            "parameters": ADD_TOOL.parameters,
+        }
+
+    def test_host_tool_call_is_parsed_with_name_and_arguments(self):
+        expected = [{"name": "add", "a": 1, "b": 2, "tool_call_id": "call_1"}]
+        tool_call = _tool_call("add", '{"a": 1, "b": 2}')
+        assert parse_toolcall_actions([tool_call], format_error_template="{{ error }}", tools=[ADD_TOOL]) == expected
+        item = {"type": "function_call", "call_id": "call_1", "name": "add", "arguments": '{"a": 1, "b": 2}'}
+        assert (
+            parse_toolcall_actions_response([item], format_error_template="{{ error }}", tools=[ADD_TOOL]) == expected
+        )
+
+    def test_host_tool_is_unknown_unless_registered(self):
+        with pytest.raises(FormatError) as exc:
+            parse_toolcall_actions([_tool_call("add", '{"a": 1, "b": 2}')], format_error_template="{{ error }}")
+        assert "Unknown tool 'add'" in exc.value.messages[0]["content"]
+
+    @pytest.mark.parametrize(
+        ("arguments", "error"),
+        [
+            ('{"a": 1}', "Missing 'b' argument in add tool call."),
+            ("{}", "Missing 'a', 'b' argument in add tool call."),
+            ("[1, 2]", "Tool call arguments must be a JSON object.Missing 'a', 'b' argument in add tool call."),
+        ],
+    )
+    def test_invalid_host_tool_arguments_raise_format_error(self, arguments, error):
+        with pytest.raises(FormatError) as exc:
+            parse_toolcall_actions(
+                [_tool_call("add", arguments)], format_error_template="{{ error }}", tools=[ADD_TOOL]
+            )
+        assert exc.value.messages[0]["content"] == error
+        item = {"type": "function_call", "call_id": "call_1", "name": "add", "arguments": arguments}
+        with pytest.raises(FormatError) as exc:
+            parse_toolcall_actions_response([item], format_error_template="{{ error }}", tools=[ADD_TOOL])
+        assert exc.value.messages[0]["content"][0]["text"] == error

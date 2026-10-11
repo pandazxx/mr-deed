@@ -40,7 +40,7 @@ class InteractiveAgent(DefaultAgent):
     def _interrupt(self, content: str, *, itype: str = "UserInterruption") -> NoReturn:
         raise UserInterruption({"role": "user", "content": content, "extra": {"interrupt_type": itype}})
 
-    def add_messages(self, *messages: dict) -> list[dict]:
+    def add_messages(self, *messages: dict, **kwargs) -> list[dict]:
         # Extend supermethod to print messages
         for msg in messages:
             role, content = msg.get("role") or msg.get("type", "unknown"), get_content_string(msg)
@@ -53,7 +53,7 @@ class InteractiveAgent(DefaultAgent):
             else:
                 console.print(f"\n[bold green]{role.capitalize()}[/bold green]:\n", end="", highlight=False)
             console.print(content, highlight=False, markup=False)
-        return super().add_messages(*messages)
+        return super().add_messages(*messages, **kwargs)
 
     def query(self) -> dict:
         # Extend supermethod to handle human mode
@@ -124,17 +124,17 @@ class InteractiveAgent(DefaultAgent):
     def execute_actions(self, message: dict) -> list[dict]:
         # Override to handle user confirmation and confirm_exit, with try/finally to preserve partial outputs
         actions = message.get("extra", {}).get("actions", [])
-        commands = [action["command"] for action in actions]
         outputs = []
         try:
-            self._ask_confirmation_or_interrupt(commands)
+            self._ask_confirmation_or_interrupt(actions)
             for action in actions:
-                outputs.append(self.env.execute(action))
+                outputs.append(self.execute_action(action))
         except Submitted as e:
+            outputs.append({"output": e.messages[0]["content"], "returncode": 0, "exception_info": ""})
             self._check_for_new_task_or_submit(e)
         finally:
             result = self.add_messages(
-                *self.model.format_observation_messages(message, outputs, self.get_template_vars())
+                *self.model.format_observation_messages(message, outputs, self.get_template_vars()), kind="observation"
             )
         return result
 
@@ -159,14 +159,16 @@ class InteractiveAgent(DefaultAgent):
                 self._interrupt(f"The user added a new task: {user_input}", itype="UserNewTask")
         raise e
 
-    def _should_ask_confirmation(self, action: str) -> bool:
-        return self.config.mode == "confirm" and not any(re.match(r, action) for r in self.config.whitelist_actions)
+    def _should_ask_confirmation(self, action: dict) -> bool:
+        """Only bash commands can be whitelisted; host tool calls are always confirmed in confirm mode."""
+        command = action.get("command", "")
+        return self.config.mode == "confirm" and not any(re.match(r, command) for r in self.config.whitelist_actions)
 
-    def _ask_confirmation_or_interrupt(self, commands: list[str]) -> None:
-        if not any(self._should_ask_confirmation(c) for c in commands):
+    def _ask_confirmation_or_interrupt(self, actions: list[dict]) -> None:
+        if not any(self._should_ask_confirmation(action) for action in actions):
             return
         prompt = (
-            f"[bold yellow]Execute {len(commands)} action(s)?[/] [green][bold]Enter[/] to confirm[/], "
+            f"[bold yellow]Execute {len(actions)} action(s)?[/] [green][bold]Enter[/] to confirm[/], "
             "[red]type [bold]comment[/] to reject[/], or [blue][bold]/h[/] to show available commands[/]\n"
             "[bold yellow]>[/bold yellow] "
         )

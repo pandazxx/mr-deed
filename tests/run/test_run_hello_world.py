@@ -37,8 +37,8 @@ def test_run_hello_world_end_to_end(local_test_data):
     messages = agent.messages
 
     # Verify we have the right number of messages
-    # Should be: system + user (initial) + (assistant + user) * number_of_steps
-    expected_total_messages = 2 + (len(model_responses) * 2)
+    # Should be: system + user (initial) + (assistant + observation) * number_of_steps + exit
+    expected_total_messages = 3 + (len(model_responses) * 2)
     assert len(messages) == expected_total_messages, f"Expected {expected_total_messages} messages, got {len(messages)}"
 
     assert_observations_match(expected_observations, messages)

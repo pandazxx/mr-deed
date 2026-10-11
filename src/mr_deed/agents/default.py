@@ -4,15 +4,18 @@ or https://minimal-agent.com for a tutorial on the basic building principles.
 
 import json
 import logging
+import threading
 import time
 import traceback
+from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import Any
 
 from jinja2 import StrictUndefined, Template
 from pydantic import BaseModel
 
-from mr_deed import Environment, Model, __version__
-from mr_deed.exceptions import FormatError, InterruptAgentFlow, LimitsExceeded, TimeExceeded
+from mr_deed import Environment, Model, Tool, __version__
+from mr_deed.exceptions import Cancelled, FormatError, InterruptAgentFlow, LimitsExceeded, Submitted, TimeExceeded
 from mr_deed.utils.serialize import recursive_merge
 
 
@@ -23,12 +26,14 @@ class AgentConfig(BaseModel):
     """Template for the system message (the first message)."""
     instance_template: str
     """Template for the first user message specifying the task (the second message overall)."""
+    continue_template: str = "{{ task }}"
+    """Template for the user message that continues an existing conversation (see `DefaultAgent.continue_run`)."""
     step_limit: int = 0
-    """Maximum number of steps the agent can take."""
+    """Maximum number of steps the agent can take (per run or continuation)."""
     cost_limit: float = 3.0
-    """Stop agent after exceeding (!) this cost."""
+    """Stop agent after exceeding (!) this cost (per run or continuation)."""
     wall_time_limit_seconds: int = 0
-    """Stop agent after this many seconds of wall-clock time. 0 means no limit."""
+    """Stop agent after this many seconds of wall-clock time (per run or continuation). 0 means no limit."""
     max_consecutive_format_errors: int = 3
     """Exit after this many format errors in a row (0 = no limit)."""
     output_path: Path | None = None
@@ -36,18 +41,54 @@ class AgentConfig(BaseModel):
 
 
 class DefaultAgent:
-    def __init__(self, model: Model, env: Environment, *, config_class: type = AgentConfig, **kwargs):
-        """See the `AgentConfig` class for permitted keyword arguments."""
+    def __init__(
+        self,
+        model: Model,
+        env: Environment,
+        *,
+        config_class: type = AgentConfig,
+        tools: Sequence[Tool] = (),
+        on_event: Callable[[str, dict], Any] | None = None,
+        cancel_event: threading.Event | None = None,
+        **kwargs,
+    ):
+        """See the `AgentConfig` class for permitted keyword arguments.
+
+        `tools` are offered to the LM alongside bash (tool-call models only) and may be replaced between runs.
+        `on_event(kind, payload)` is called synchronously with every message added to the trajectory
+        (kind: system, user, assistant, observation, format_error, exit) and with every `action` before it runs.
+        Setting `cancel_event` from any thread stops the run before its next query or action with
+        exit_status "Cancelled"; `cancel()` additionally kills the command currently executing.
+        """
         self.config = config_class(**kwargs)
         self.messages: list[dict] = []
         self.model = model
         self.env = env
+        self.tools = list(tools)
+        self.on_event = on_event or (lambda kind, payload: None)
+        self.cancel_event = cancel_event or threading.Event()
         self.extra_template_vars = {}
         self.logger = logging.getLogger("agent")
         self.cost = 0.0
+        """Cost of the current run or continuation (what the limits apply to); see `total_cost`."""
         self.n_calls = 0
+        self.total_cost = 0.0
+        """Cost across all runs and continuations of this conversation."""
+        self.total_n_calls = 0
         self.n_consecutive_format_errors = 0
         self._start_time = time.time()
+
+    @classmethod
+    def from_trajectory(cls, path: Path, model: Model, env: Environment, **kwargs):
+        """Restore a conversation saved by `save()` (messages, config, cumulative stats) so it can be continued
+        with `continue_run`. Keyword arguments (config values, `tools`, `on_event`, ...) override the saved ones.
+        """
+        data = json.loads(Path(path).read_text())
+        agent = cls(model, env, **(data["info"]["config"]["agent"] | kwargs))
+        agent.messages = data["messages"]
+        agent.total_cost = data["info"]["model_stats"]["instance_cost"]
+        agent.total_n_calls = data["info"]["model_stats"]["api_calls"]
+        return agent
 
     def get_template_vars(self, **kwargs) -> dict:
         return recursive_merge(
@@ -66,9 +107,12 @@ class DefaultAgent:
     def _render_template(self, template: str) -> str:
         return Template(template, undefined=StrictUndefined).render(**self.get_template_vars())
 
-    def add_messages(self, *messages: dict) -> list[dict]:
+    def add_messages(self, *messages: dict, kind: str = "") -> list[dict]:
+        """Append messages to the trajectory and emit one event each (`kind` defaults to the message's role)."""
         self.logger.debug(messages)  # set log level to debug to see
         self.messages.extend(messages)
+        for message in messages:
+            self.on_event(kind or message.get("role", "unknown"), message)
         return list(messages)
 
     def handle_uncaught_exception(self, e: Exception) -> list[dict]:
@@ -86,32 +130,47 @@ class DefaultAgent:
         )
 
     def run(self, task: str = "", **kwargs) -> dict:
-        """Run step() until agent is finished. Returns dictionary with exit_status, submission keys."""
-        self.extra_template_vars |= {"task": task, **kwargs}
+        """Start a new conversation and run step() until the agent is finished.
+        Returns dictionary with exit_status, submission keys."""
         self.messages = []
+        self._start_run(task, **kwargs)
         self.add_messages(
             self.model.format_message(role="system", content=self._render_template(self.config.system_template)),
             self.model.format_message(role="user", content=self._render_template(self.config.instance_template)),
         )
+        return self._run_steps()
+
+    def continue_run(self, task: str = "", **kwargs) -> dict:
+        """Continue the conversation in `messages` (from a previous run or `from_trajectory`) with a new user
+        prompt rendered from `continue_template`. Step, cost and time limits start over for this run."""
+        self._start_run(task, **kwargs)
+        self.add_messages(
+            self.model.format_message(role="user", content=self._render_template(self.config.continue_template))
+        )
+        return self._run_steps()
+
+    def _start_run(self, task: str, **kwargs) -> None:
+        self.extra_template_vars |= {"task": task, **kwargs}
+        self.cost, self.n_calls, self.n_consecutive_format_errors, self._start_time = 0.0, 0, 0, time.time()
+
+    def _run_steps(self) -> dict:
         while True:
             try:
                 self.step()
                 self.n_consecutive_format_errors = 0  # reset on any clean step
             except FormatError as e:
                 # The call was billed before parsing failed, so query() never got to charge it.
-                self.cost += e.messages[0].get("extra", {}).get("cost", 0.0)
+                self._add_cost(e.messages[0].get("extra", {}).get("cost", 0.0))
                 self.n_consecutive_format_errors += 1
+                self.add_messages(*e.messages, kind="format_error")
                 if 0 < self.config.max_consecutive_format_errors <= self.n_consecutive_format_errors:
                     self.add_messages(
-                        *e.messages,
                         {
                             "role": "exit",
                             "content": "RepeatedFormatError",
                             "extra": {"exit_status": "RepeatedFormatError", "submission": ""},
-                        },
+                        }
                     )
-                else:
-                    self.add_messages(*e.messages)
             except InterruptAgentFlow as e:
                 self.add_messages(*e.messages)
             except Exception as e:
@@ -129,6 +188,7 @@ class DefaultAgent:
 
     def query(self) -> dict:
         """Query the model and return model messages. Override to add hooks."""
+        self._raise_if_cancelled()
         if 0 < self.config.step_limit <= self.n_calls or 0 < self.config.cost_limit <= self.cost:
             raise LimitsExceeded(
                 {
@@ -146,15 +206,56 @@ class DefaultAgent:
                 }
             )
         self.n_calls += 1
-        message = self.model.query(self.messages)
-        self.cost += message.get("extra", {}).get("cost", 0.0)
-        self.add_messages(message)
+        self.total_n_calls += 1
+        # Exit records of earlier runs stay in the trajectory but are not part of the conversation
+        message = self.model.query([m for m in self.messages if m.get("role") != "exit"], tools=self.tools)
+        self._add_cost(message.get("extra", {}).get("cost", 0.0))
+        self.add_messages(message, kind="assistant")
         return message
 
+    def _add_cost(self, cost: float) -> None:
+        self.cost += cost
+        self.total_cost += cost
+
+    def cancel(self) -> None:
+        """Stop the run from another thread: the next query or action exits with exit_status "Cancelled" and the
+        command currently executing is killed if the environment supports `interrupt()`."""
+        self.cancel_event.set()
+        if interrupt := getattr(self.env, "interrupt", None):
+            interrupt()
+
+    def _raise_if_cancelled(self) -> None:
+        if self.cancel_event.is_set():
+            raise Cancelled(
+                {"role": "exit", "content": "Cancelled", "extra": {"exit_status": "Cancelled", "submission": ""}}
+            )
+
     def execute_actions(self, message: dict) -> list[dict]:
-        """Execute actions in message, add observation messages, return them."""
-        outputs = [self.env.execute(action) for action in message.get("extra", {}).get("actions", [])]
-        return self.add_messages(*self.model.format_observation_messages(message, outputs, self.get_template_vars()))
+        """Execute actions in message, add observation messages, return them. Observations are added even when an
+        action ends the run, so every tool call has its result if the conversation is continued later."""
+        outputs = []
+        try:
+            for action in message.get("extra", {}).get("actions", []):
+                outputs.append(self.execute_action(action))
+        except Submitted as e:
+            outputs.append({"output": e.messages[0]["content"], "returncode": 0, "exception_info": ""})
+            raise
+        finally:
+            observations = self.add_messages(
+                *self.model.format_observation_messages(message, outputs, self.get_template_vars()), kind="observation"
+            )
+        return observations
+
+    def execute_action(self, action: dict) -> dict:
+        """Execute a single action: `bash` in the environment, any other tool name through its `Tool.handler`
+        (which only needs to return `output`; `returncode` defaults to 0)."""
+        self._raise_if_cancelled()
+        self.on_event("action", action)
+        if (name := action.get("name", "bash")) == "bash":
+            return self.env.execute(action)
+        handler = {tool.name: tool.handler for tool in self.tools}[name]
+        arguments = {k: v for k, v in action.items() if k not in ("name", "tool_call_id")}
+        return {"output": "", "returncode": 0, "exception_info": ""} | handler(arguments)
 
     def serialize(self, *extra_dicts) -> dict:
         """Serialize agent state to a json-compatible nested dictionary for saving."""
@@ -163,8 +264,8 @@ class DefaultAgent:
         agent_data = {
             "info": {
                 "model_stats": {
-                    "instance_cost": self.cost,
-                    "api_calls": self.n_calls,
+                    "instance_cost": self.total_cost,
+                    "api_calls": self.total_n_calls,
                 },
                 "config": {
                     "agent": self.config.model_dump(mode="json"),

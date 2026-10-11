@@ -2,9 +2,11 @@
 
 import json
 import time
+from collections.abc import Sequence
 
 from jinja2 import StrictUndefined, Template
 
+from mr_deed import Tool
 from mr_deed.exceptions import FormatError
 from mr_deed.models.utils.openai_multimodal import expand_multimodal_content
 
@@ -27,16 +29,26 @@ BASH_TOOL = {
 }
 
 
+def tool_schema(tool: Tool) -> dict:
+    """Chat-completions function definition of a host tool."""
+    return {
+        "type": "function",
+        "function": {"name": tool.name, "description": tool.description, "parameters": tool.parameters},
+    }
+
+
 def parse_toolcall_actions(
-    tool_calls: list, *, format_error_template: str, template_kwargs: dict | None = None
+    tool_calls: list, *, format_error_template: str, template_kwargs: dict | None = None, tools: Sequence[Tool] = ()
 ) -> list[dict]:
-    """Parse tool calls from the response. Raises FormatError if unknown tool or invalid args.
+    """Parse tool calls from the response into actions `{"name": ..., <arguments>, "tool_call_id": ...}`.
+    Raises FormatError for tools other than bash and `tools`, invalid JSON or missing required arguments.
 
     ``template_kwargs`` are extra variables exposed to ``format_error_template`` (e.g.
     ``{"finish_reason": ...}`` so a template can distinguish a real format mistake from a
     ``max_tokens`` truncation).
     """
     template_kwargs = template_kwargs or {}
+    schemas = {"bash": BASH_TOOL["function"]["parameters"]} | {tool.name: tool.parameters for tool in tools}
     if not tool_calls:
         raise FormatError(
             {
@@ -52,16 +64,17 @@ def parse_toolcall_actions(
         )
     actions = []
     for tool_call in tool_calls:
-        error_msg = ""
-        args = {}
+        name, error_msg, args = tool_call.function.name, "", {}
         try:
             args = json.loads(tool_call.function.arguments)
         except Exception as e:
             error_msg = f"Error parsing tool call arguments: {e}."
-        if tool_call.function.name != "bash":
-            error_msg += f"Unknown tool '{tool_call.function.name}'."
-        if not isinstance(args, dict) or "command" not in args:
-            error_msg += "Missing 'command' argument in bash tool call."
+        if not isinstance(args, dict):
+            error_msg, args = error_msg + "Tool call arguments must be a JSON object.", {}
+        if name not in schemas:
+            error_msg += f"Unknown tool '{name}'."
+        elif missing := [p for p in schemas[name].get("required", []) if p not in args]:
+            error_msg += f"Missing {', '.join(map(repr, missing))} argument in {name} tool call."
         if error_msg:
             raise FormatError(
                 {
@@ -72,7 +85,7 @@ def parse_toolcall_actions(
                     "extra": {"interrupt_type": "FormatError"},
                 }
             )
-        actions.append({"command": args["command"], "tool_call_id": tool_call.id})
+        actions.append({"name": name, **args, "tool_call_id": tool_call.id})
     return actions
 
 
