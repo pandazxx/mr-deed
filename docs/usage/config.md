@@ -26,7 +26,7 @@ Set a specific key in the global config file.
 
 ```bash
 # example: set default model
-mini-extra config set MSWEA_MODEL_NAME anthropic/claude-sonnet-4-5-20250929
+mini-extra config set MRDEED_MODEL_NAME anthropic/claude-sonnet-4-5-20250929
 # or interactively
 mini-extra config set
 ```
@@ -36,7 +36,7 @@ mini-extra config set
 Remove a key from the global config file.
 
 ```bash
-mini-extra config unset MSWEA_MODEL_NAME
+mini-extra config unset MRDEED_MODEL_NAME
 ```
 
 ### `edit`
@@ -55,11 +55,11 @@ For more configuration options, see [global configuration](../advanced/global_co
 
 ??? note "Run script"
 
-    - [Read on GitHub](https://github.com/swe-agent/mini-swe-agent/blob/main/src/minisweagent/run/utilities/config.py)
+    - [Read on GitHub](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/run/utilities/config.py)
     - [API reference](../reference/run/config.md)
 
     ```python
-    --8<-- "src/minisweagent/run/utilities/config.py"
+    --8<-- "src/mr_deed/run/utilities/config.py"
     ```
 
 {% include-markdown "../_footer.md" %}

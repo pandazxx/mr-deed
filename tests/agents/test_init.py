@@ -1,18 +1,18 @@
 import pytest
 
-from minisweagent.agents import get_agent, get_agent_class
-from minisweagent.agents.default import DefaultAgent
-from minisweagent.agents.interactive import InteractiveAgent
-from minisweagent.environments.local import LocalEnvironment
-from minisweagent.models.test_models import DeterministicModel
+from mr_deed.agents import get_agent, get_agent_class
+from mr_deed.agents.default import DefaultAgent
+from mr_deed.agents.interactive import InteractiveAgent
+from mr_deed.environments.local import LocalEnvironment
+from mr_deed.models.test_models import DeterministicModel
 
 
 class TestGetAgentClass:
     @pytest.mark.parametrize(
         ("spec", "expected"),
         [
-            ("minisweagent.agents.default.DefaultAgent", DefaultAgent),
-            ("minisweagent.agents.interactive.InteractiveAgent", InteractiveAgent),
+            ("mr_deed.agents.default.DefaultAgent", DefaultAgent),
+            ("mr_deed.agents.interactive.InteractiveAgent", InteractiveAgent),
         ],
     )
     def test_full_path(self, spec, expected):

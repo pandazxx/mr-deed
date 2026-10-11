@@ -34,7 +34,7 @@
         ```bash
         mini-extra swebench --help
         # or
-        python src/minisweagent/run/benchmarks/swebench.py --help
+        python src/mr_deed/run/benchmarks/swebench.py --help
         # Example:
         mini-extra swebench \
             --model anthropic/claude-sonnet-4-5-20250929 \
@@ -70,7 +70,7 @@
         ```bash
         mini-extra swebench-single --help
         # or
-        python src/minisweagent/run/benchmarks/swebench_single.py --help
+        python src/mr_deed/run/benchmarks/swebench_single.py --help
         # Example:
         mini-extra swebench-single \
             --subset verified \
@@ -138,7 +138,7 @@
 
 > Can I set global cost limits?
 
-Yes, you can set global cost limits with the `MSWEA_GLOBAL_CALL_LIMIT` and `MSWEA_GLOBAL_COST_LIMIT` environment variables/global config.
+Yes, you can set global cost limits with the `MRDEED_GLOBAL_CALL_LIMIT` and `MRDEED_GLOBAL_COST_LIMIT` environment variables/global config.
 See [global configuration](../advanced/global_configuration.md) for more details.
 
 > What happens to uncompleted tasks when I abort with KeyboardInterrupt?
@@ -200,28 +200,28 @@ See [this guide](../advanced/environments.md) for more details.
 
 ??? note "Default config"
 
-    - [Read on GitHub](https://github.com/swe-agent/mini-swe-agent/blob/main/src/minisweagent/config/benchmarks/swebench.yaml)
+    - [Read on GitHub](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/config/benchmarks/swebench.yaml)
 
     ```yaml
-    --8<-- "src/minisweagent/config/benchmarks/swebench.yaml"
+    --8<-- "src/mr_deed/config/benchmarks/swebench.yaml"
     ```
 
 ??? note "`swebench.py` run script"
 
-    - [Read on GitHub](https://github.com/swe-agent/mini-swe-agent/blob/main/src/minisweagent/run/benchmarks/swebench.py)
+    - [Read on GitHub](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/run/benchmarks/swebench.py)
     - [API reference](../reference/run/swebench.md)
 
     ```python
-    --8<-- "src/minisweagent/run/benchmarks/swebench.py"
+    --8<-- "src/mr_deed/run/benchmarks/swebench.py"
     ```
 
 ??? note "`swebench_single.py` run script"
 
-    - [Read on GitHub](https://github.com/swe-agent/mini-swe-agent/blob/main/src/minisweagent/run/benchmarks/swebench_single.py)
+    - [Read on GitHub](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/run/benchmarks/swebench_single.py)
     - [API reference](../reference/run/swebench_single.md)
 
     ```python
-    --8<-- "src/minisweagent/run/benchmarks/swebench_single.py"
+    --8<-- "src/mr_deed/run/benchmarks/swebench_single.py"
     ```
 
 {% include-markdown "../_footer.md" %}

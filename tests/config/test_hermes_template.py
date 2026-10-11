@@ -4,7 +4,7 @@ import pytest
 import yaml
 from jinja2 import StrictUndefined, Template
 
-CONFIG_PATH = Path(__file__).parent.parent.parent / "src" / "minisweagent" / "config" / "extra" / "hermes.yaml"
+CONFIG_PATH = Path(__file__).parent.parent.parent / "src" / "mr_deed" / "config" / "extra" / "hermes.yaml"
 
 
 def _render_system_template(tool: str, work_model: str) -> str:
@@ -16,7 +16,7 @@ def _render_system_template(tool: str, work_model: str) -> str:
 @pytest.mark.parametrize(
     ("tool", "work_model", "expected_command"),
     [
-        ("codex", "", 'codex exec --sandbox workspace-write -o "/tmp/mswea_hermes_output.txt"'),
+        ("codex", "", 'codex exec --sandbox workspace-write -o "/tmp/mrdeed_hermes_output.txt"'),
         ("codex", "gpt-5-codex", "codex exec -m gpt-5-codex --sandbox workspace-write"),
         ("claude", "", "claude -p --permission-mode bypassPermissions --output-format text"),
         ("claude", "sonnet", "claude -p --model sonnet --permission-mode bypassPermissions"),
@@ -31,10 +31,10 @@ def test_system_template_renders_tool_specific_delegation_command(tool, work_mod
 def test_system_template_redirects_output_to_a_quoted_file_path_for_both_tools():
     for tool in ("codex", "claude"):
         rendered = _render_system_template(tool, "")
-        assert '"/tmp/mswea_hermes_output.txt"' in rendered
-        assert 'cat "/tmp/mswea_hermes_output.txt"' in rendered
-    assert '-o "/tmp/mswea_hermes_output.txt"' in _render_system_template("codex", "")
-    assert '>"/tmp/mswea_hermes_output.txt"' in _render_system_template("claude", "")
+        assert '"/tmp/mrdeed_hermes_output.txt"' in rendered
+        assert 'cat "/tmp/mrdeed_hermes_output.txt"' in rendered
+    assert '-o "/tmp/mrdeed_hermes_output.txt"' in _render_system_template("codex", "")
+    assert '>"/tmp/mrdeed_hermes_output.txt"' in _render_system_template("claude", "")
 
 
 def test_system_template_passes_the_custom_traceable_paths_through_when_given():
@@ -48,7 +48,7 @@ def test_system_template_passes_the_custom_traceable_paths_through_when_given():
     )
     assert '"/traceable/task-1/work_llm_output.txt"' in rendered
     assert '"/traceable/task-1/work_llm_progress.log"' in rendered
-    assert "/tmp/mswea_hermes_output.txt" not in rendered
+    assert "/tmp/mrdeed_hermes_output.txt" not in rendered
 
 
 def test_system_template_passes_the_work_prompt_via_an_unindented_heredoc_not_a_quoted_argument():

@@ -28,11 +28,7 @@ This is done with the `model_kwargs` dictionary which is directly passed to `lit
 In other words, this is how we invoke litellm:
 
 ```python
-litellm.completion(
-    model=model_name,
-    messages=messages,
-    **model_kwargs
-)
+litellm.completion(model=model_name, messages=messages, **model_kwargs)
 ```
 
 You can set `model_kwargs` in an agent config file like the following one:
@@ -40,7 +36,7 @@ You can set `model_kwargs` in an agent config file like the following one:
 ??? note "Default configuration file"
 
     ```yaml
-    --8<-- "src/minisweagent/config/mini.yaml"
+    --8<-- "src/mr_deed/config/mini.yaml"
     ```
 
 In the last section, you can add
@@ -57,7 +53,7 @@ model:
 
 !!! tip "Updating the default `mini` configuration file"
 
-    You can set the `MSWEA_MINI_CONFIG_PATH` setting to set path to the default `mini` configuration file.
+    You can set the `MRDEED_MINI_CONFIG_PATH` setting to set path to the default `mini` configuration file.
     This will allow you to override the default configuration file with your own.
     See the [global configuration guide](../advanced/global_configuration.md) for more details.
 
@@ -65,11 +61,11 @@ If this is not enough, our model class should be simple to modify:
 
 ??? note "Complete model class"
 
-    - [Read on GitHub](https://github.com/swe-agent/mini-swe-agent/blob/main/src/minisweagent/models/litellm_model.py)
+    - [Read on GitHub](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/models/litellm_model.py)
     - [API reference](../reference/models/litellm.md)
 
     ```python
-    --8<-- "src/minisweagent/models/litellm_model.py"
+    --8<-- "src/mr_deed/models/litellm_model.py"
     ```
 
 The other part that you most likely need to figure out are costs.
@@ -94,7 +90,7 @@ model:
 Alternatively, you can set the global setting:
 
 ```bash
-export MSWEA_COST_TRACKING="ignore_errors"
+export MRDEED_COST_TRACKING="ignore_errors"
 ```
 
 However, note that this is a global setting, and will affect all models!
@@ -159,7 +155,7 @@ vllm serve ricdomolm/mini-coder-1.7b &
 
 By default, the server will be available at `http://localhost:8000`.
 
-Second, edit the mini-swe-agent SWE-bench config file located in `src/minisweagent/config/benchmarks/swebench.yaml` to include your local vLLM model:
+Second, edit the mr-deed SWE-bench config file located in `src/mr_deed/config/benchmarks/swebench.yaml` to include your local vLLM model:
 
 ```yaml
 model:

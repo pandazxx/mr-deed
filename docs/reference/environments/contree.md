@@ -2,16 +2,16 @@
 
 !!! note "ConTree Environment class"
 
-    - [Read on GitHub](https://github.com/swe-agent/mini-swe-agent/blob/main/src/minisweagent/environments/extra/contree.py)
+    - [Read on GitHub](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/environments/extra/contree.py)
     - Requires [ConTree](https://contree.dev) token
 
     ??? note "Full source code"
 
         ```python
-        --8<-- "src/minisweagent/environments/extra/contree.py"
+        --8<-- "src/mr_deed/environments/extra/contree.py"
         ```
 
-::: minisweagent.environments.extra.contree
+::: mr_deed.environments.extra.contree
 
 This environment executes commands in [ConTree](https://contree.dev) sandboxes using [ConTree SDK](https://github.com/nebius/contree-sdk)
 
@@ -19,7 +19,7 @@ This environment executes commands in [ConTree](https://contree.dev) sandboxes u
 
 1. Install the dependencies:
    ```bash
-   pip install "mini-swe-agent[contree]"
+   pip install "mr-deed[contree]"
    ```
 
 2. Set up ConTree token and base_url:
@@ -30,7 +30,7 @@ This environment executes commands in [ConTree](https://contree.dev) sandboxes u
 
 ## Usage
 
-Run mini-swe-agent like with any other environment:
+Run mr-deed like with any other environment:
 ```
 mini-extra swebench \
     --subset verified \

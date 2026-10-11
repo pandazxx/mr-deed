@@ -1,20 +1,20 @@
 <div align="center">
-<a href="https://mini-swe-agent.com/latest/"><img src="https://github.com/SWE-agent/mini-swe-agent/raw/main/docs/assets/mini-swe-agent-banner.svg" alt="mini-swe-agent banner" style="height: 7em"/></a>
+<a href="https://pandazxx.github.io/mr-deed/latest/"><img src="https://github.com/pandazxx/mr-deed/raw/main/docs/assets/mini-swe-agent-banner.svg" alt="mr-deed banner" style="height: 7em"/></a>
 </div>
 
 # The minimal AI software engineering agent
 
 📣 [mini-swe-agent now powers Ramp SWE-Bench](https://labs.ramp.com/swebench)<br/>
 📣 [mini-swe-agent beats Claude Code and Codex on DeepSWE](https://deepswe.datacurve.ai/blog#evaluation-harness)<br/>
-📣 [Run mini-swe-agent on our new & extremely challenging benchmark, ProgramBench](https://mini-swe-agent.com/latest/usage/programbench/)<br/>
+📣 [Run mini-swe-agent on our new & extremely challenging benchmark, ProgramBench](https://pandazxx.github.io/mr-deed/latest/usage/programbench/)<br/>
 📣 [New tutorial on building minimal AI agents](https://minimal-agent.com/)
 
-[![Docs](https://img.shields.io/badge/Docs-green?style=for-the-badge&logo=materialformkdocs&logoColor=white)](https://mini-swe-agent.com/latest/)
+[![Docs](https://img.shields.io/badge/Docs-green?style=for-the-badge&logo=materialformkdocs&logoColor=white)](https://pandazxx.github.io/mr-deed/latest/)
 [![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://join.slack.com/t/swe-bench/shared_invite/zt-36pj9bu5s-o3_yXPZbaH2wVnxnss1EkQ)
-[![PyPI - Version](https://img.shields.io/pypi/v/mini-swe-agent?style=for-the-badge&logo=python&logoColor=white&labelColor=black&color=deeppink)](https://pypi.org/project/mini-swe-agent/)
+[![PyPI - Version](https://img.shields.io/pypi/v/mr-deed?style=for-the-badge&logo=python&logoColor=white&labelColor=black&color=deeppink)](https://pypi.org/project/mr-deed/)
 
 > [!WARNING]
-> This is **mini-swe-agent v2**. Read the [migration guide](https://mini-swe-agent.com/latest/advanced/v2_migration/). For the previous version, check out the [v1 branch](https://github.com/SWE-agent/mini-swe-agent/tree/v1).
+> This is **mr-deed v2**. Read the [migration guide](https://pandazxx.github.io/mr-deed/latest/advanced/v2_migration/). For the previous version, check out the [v1 branch](https://github.com/pandazxx/mr-deed/tree/v1).
 
 In 2024, we built [SWE-bench](https://github.com/swe-bench/SWE-bench) & [SWE-agent](https://github.com/swe-agent/swe-agent) and helped kickstart the coding agent revolution.
 
@@ -23,13 +23,13 @@ We now ask: **What if our agent was 100x simpler, and still worked nearly as wel
 `mini` is
 
 - **Widely adopted**: Used by Meta, NVIDIA, Essential AI, IBM, Nebius, Anyscale, Princeton University, Stanford University, and many more.
-- **Minimal**: Just some 100 lines of python for the [agent class](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/agents/default.py) (and a bit more for the [environment](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/environments/local.py),
-[model](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/models/litellm_model.py), and [run script](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/run/hello_world.py)) — no fancy dependencies!
+- **Minimal**: Just some 100 lines of python for the [agent class](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/agents/default.py) (and a bit more for the [environment](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/environments/local.py),
+[model](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/models/litellm_model.py), and [run script](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/run/hello_world.py)) — no fancy dependencies!
 - **Performant:** Scores >74% on the [SWE-bench verified benchmark](https://www.swebench.com/); starts much faster than Claude Code
 - **Deployable:** Supports **local environments**, **docker/podman**, **singularity/apptainer**, **bublewrap**, **contree**, and more
 - **Compatible:** Supports all models via **litellm**, **openrouter**, **portkey**, and more. Support for `/completion` and `/response` endpoints, interleaved thinking etc.
 - Built by the Princeton & Stanford team behind [SWE-bench](https://swebench.com), [SWE-agent](https://swe-agent.com), and more
-- **Tested:** [![Codecov](https://img.shields.io/codecov/c/github/swe-agent/mini-swe-agent?style=flat-square)](https://codecov.io/gh/SWE-agent/mini-swe-agent)
+- **Tested:** [![Codecov](https://img.shields.io/codecov/c/github/pandazxx/mr-deed?style=flat-square)](https://codecov.io/gh/pandazxx/mr-deed)
 
 <details>
 
@@ -47,7 +47,7 @@ In fact, the `mini` agent
   Great for debugging & fine-tuning.
 - **Executes actions with `subprocess.run`** — every action is completely independent (as opposed to keeping a stateful shell session running).
   This makes it trivial to execute the actions in sandboxes (literally just switch out `subprocess.run` with `docker exec`) and to
-  scale up effortlessly. Seriously, this is [a big deal](https://mini-swe-agent.com/latest/faq/#why-no-shell-session), trust me.
+  scale up effortlessly. Seriously, this is [a big deal](https://pandazxx.github.io/mr-deed/latest/faq/#why-no-shell-session), trust me.
 
 This makes it perfect as a baseline system and for a system that puts the language model (rather than
 the agent scaffold) in the middle of our attention.
@@ -73,17 +73,17 @@ Unlike other agents (including our own [swe-agent](https://swe-agent.com/latest/
   Want it to do something specific like opening a PR?
   Just tell the LM to figure it out rather than spending time to implement it in the agent.
 - **Executes actions with `subprocess.run`** — every action is completely independent (as opposed to keeping a stateful shell session running).
-  This is [a big deal](https://mini-swe-agent.com/latest/faq/#why-no-shell-session) for the stability of the agent, trust me.
+  This is [a big deal](https://pandazxx.github.io/mr-deed/latest/faq/#why-no-shell-session) for the stability of the agent, trust me.
 - **Has a completely linear history** — every step of the agent just appends to the messages that are passed to the LM in the next step and that's it.
   This is great for debugging and understanding what the LM is prompted with.
 
 </details>
 
 <details>
-<summary>Should I use SWE-agent or mini-SWE-agent?</summary>
+<summary>Should I use SWE-agent or mr-deed?</summary>
 
-You should consider `mini-swe-agent` your default choice.
-In particular, you should use `mini-swe-agent` if
+You should consider `mr-deed` your default choice.
+In particular, you should use `mr-deed` if
 
 - You want a quick command line tool that works locally
 - You want an agent with a very simple control flow
@@ -105,10 +105,10 @@ What you get with both
 <table>
 <tr>
 <td width="50%">
-<a href="https://mini-swe-agent.com/latest/usage/mini/"><strong>CLI</strong></a> (<code>mini</code>)
+<a href="https://pandazxx.github.io/mr-deed/latest/usage/mini/"><strong>CLI</strong></a> (<code>mini</code>)
 </td>
 <td>
-<a href="https://mini-swe-agent.com/latest/usage/swebench/"><strong>Batch inference</strong></a>
+<a href="https://pandazxx.github.io/mr-deed/latest/usage/swebench/"><strong>Batch inference</strong></a>
 </td>
 </tr>
 <tr>
@@ -125,10 +125,10 @@ What you get with both
 </tr>
 <tr>
 <td>
-<a href="https://mini-swe-agent.com/latest/usage/inspector/"><strong>Trajectory browser</strong></a>
+<a href="https://pandazxx.github.io/mr-deed/latest/usage/inspector/"><strong>Trajectory browser</strong></a>
 </td>
 <td>
-<a href="https://mini-swe-agent.com/latest/advanced/cookbook/"><strong>Python bindings</strong></a>
+<a href="https://pandazxx.github.io/mr-deed/latest/advanced/cookbook/"><strong>Python bindings</strong></a>
 </td>
 </tr>
 <tr>
@@ -156,35 +156,35 @@ agent.run("Write a sudoku game")
 **Option 1:** If you just want to try out the CLI (package installed in anonymous virtual environment)
 
 ```bash
-pip install uv && uvx mini-swe-agent
+pip install uv && uvx mr-deed
 # or
-pip install pipx && pipx ensurepath && pipx run mini-swe-agent
+pip install pipx && pipx ensurepath && pipx run mr-deed
 ```
 
 **Option 2:** Install CLI & python bindings in current environment
 
 ```bash
-pip install mini-swe-agent
+pip install mr-deed
 mini  # run the CLI
 ```
 
 **Option 3:** Install from source (developer setup)
 
 ```bash
-git clone https://github.com/SWE-agent/mini-swe-agent.git
-cd mini-swe-agent && pip install -e .
+git clone https://github.com/pandazxx/mr-deed.git
+cd mr-deed && pip install -e .
 mini  # run the CLI
 ```
 
-Read more in our [documentation](https://mini-swe-agent.com/latest/):
+Read more in our [documentation](https://pandazxx.github.io/mr-deed/latest/):
 
-* [Quick start guide](https://mini-swe-agent.com/latest/quickstart/)
-* [Using the `mini` CLI](https://mini-swe-agent.com/latest/usage/mini/)
-* [Global configuration](https://mini-swe-agent.com/latest/advanced/global_configuration/)
-* [Yaml configuration files](https://mini-swe-agent.com/latest/advanced/yaml_configuration/)
-* [Power up with the cookbook](https://mini-swe-agent.com/latest/advanced/cookbook/)
-* [FAQ](https://mini-swe-agent.com/latest/faq/)
-* [Contribute!](https://mini-swe-agent.com/latest/contributing/)
+* [Quick start guide](https://pandazxx.github.io/mr-deed/latest/quickstart/)
+* [Using the `mini` CLI](https://pandazxx.github.io/mr-deed/latest/usage/mini/)
+* [Global configuration](https://pandazxx.github.io/mr-deed/latest/advanced/global_configuration/)
+* [Yaml configuration files](https://pandazxx.github.io/mr-deed/latest/advanced/yaml_configuration/)
+* [Power up with the cookbook](https://pandazxx.github.io/mr-deed/latest/advanced/cookbook/)
+* [FAQ](https://pandazxx.github.io/mr-deed/latest/faq/)
+* [Contribute!](https://pandazxx.github.io/mr-deed/latest/contributing/)
 
 ## Attribution
 

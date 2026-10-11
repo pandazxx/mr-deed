@@ -64,9 +64,9 @@ jobs:
       - name: Install dependencies
         run: |
             uv pip install --python ${Python_ROOT_DIR} -e '.[full]'
-      - name: Configure mini-swe-agent
+      - name: Configure mr-deed
         run: |
-          mini-extra config set MSWEA_CONFIGURED 'true'
+          mini-extra config set MRDEED_CONFIGURED 'true'
           mini-extra config set OPENAI_API_KEY '${{ secrets.OPENAI_API_KEY }}'
           mini-extra config set OPENROUTER_API_KEY '${{ secrets.OPENROUTER_API_KEY }}'
           # mini-extra config set PORTKEY_API_KEY '${{ secrets.PORTKEY_API_KEY }}'
@@ -77,4 +77,4 @@ jobs:
         uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: SWE-agent/mini-swe-agent
+          slug: pandazxx/mr-deed

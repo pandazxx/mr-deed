@@ -2,9 +2,9 @@
 
 !!! danger "Breaking Changes"
 
-    **mini-swe-agent v2.0** brings major improvements but requires migration.
-    To stay with v1.x, pin your dependency: `mini-swe-agent~=1.0`.
-    See the [v1 documentation](https://mini-swe-agent.com/v1/) or the [v1 branch on GitHub](https://github.com/SWE-agent/mini-swe-agent/tree/v1).
+    **mr-deed v2.0** brings major improvements but requires migration.
+    To stay with v1.x, pin your dependency: `mr-deed~=1.0`.
+    See the [v1 documentation](https://pandazxx.github.io/mr-deed/v1/) or the [v1 branch on GitHub](https://github.com/pandazxx/mr-deed/tree/v1).
 
 ## What's new
 
@@ -45,7 +45,7 @@ If you only changed `system_template` and `instance_template`, no changes needed
 
 **Code block format changed:**
 
-Default action regex changed from `` ```bash `` to `` ```mswea_bash_command `` to avoid conflicts with bash examples in prompts.
+Default action regex changed from `` ```bash `` to `` ```mrdeed_bash_command `` to avoid conflicts with bash examples in prompts.
 
 **Completion signal changed:**
 
@@ -95,7 +95,7 @@ Tool calling is the default. The CLI uses `mini.yaml` and `swebench.yaml` which 
 ```bash
 # Default (tool calling)
 mini
-python -m minisweagent.run.benchmarks.swebench
+python -m mr_deed.run.benchmarks.swebench
 mini-extra swebench
 
 # Text-based parsing
@@ -113,7 +113,7 @@ model:
 # or for text-based:
 model:
   model_class: litellm_textbased
-  action_regex: "```mswea_bash_command\\s*\\n(.*?)\\n```"
+  action_regex: "```mrdeed_bash_command\\s*\\n(.*?)\\n```"
 ```
 
 ## Trajectory format
@@ -136,7 +136,7 @@ In other words: the exact message structure depends on the model you use.
 - **"Visual" UI**: The `-v` flag for the alternate, textual based `mini -v` CLI is no longer supported. This was a tough decision to make, but in the end the visual mode didn't see the adoption we wanted and is significantly more complex to maintain than the default interface.
 - **Rotating API keys**: `ANTHROPIC_API_KEYS` with `::` separator no longer supported. Use single `ANTHROPIC_API_KEY`.
 - **`github_issue` run script**: The dedicated `github_issue.py` run script was removed. Use the `mini` CLI instead.
-- **`MSWEA_MODEL_API_KEY` environment variable**: No longer used to override API keys.
+- **`MRDEED_MODEL_API_KEY` environment variable**: No longer used to override API keys.
 
 **Removed model classes:**
 
@@ -159,7 +159,7 @@ In other words: the exact message structure depends on the model you use.
 
 **New environment:**
 
-- **`swerex_modal`**: Run environments on Modal (requires `pip install mini-swe-agent[modal]`)
+- **`swerex_modal`**: Run environments on Modal (requires `pip install mr-deed[modal]`)
 
 ## Architecture changes
 
@@ -173,8 +173,8 @@ In other words: the exact message structure depends on the model you use.
 
 ### Protocol changes
 
-If you want to write a custom Model, Environment or Agent compatible with `mini-swe-agent`, you don't need to subclass anything.
-Rather, mini-swe-agent fully uses duck typing with [protocols](https://typing.python.org/en/latest/spec/protocol.html)
+If you want to write a custom Model, Environment or Agent compatible with `mr-deed`, you don't need to subclass anything.
+Rather, mr-deed fully uses duck typing with [protocols](https://typing.python.org/en/latest/spec/protocol.html)
 (tl;dr: as long as you implement the required methods, you can use any class as a Model, Environment or Agent).
 Config options like `--config-class` also take full import classes, so you can put your classes wherever you want.
 
@@ -182,12 +182,15 @@ Config options like `--config-class` also take full import classes, so you can p
 
 ```python
 # Removed attributes
-cost: float      # moved to Agent
-n_calls: int     # moved to Agent
+cost: float  # moved to Agent
+n_calls: int  # moved to Agent
+
 
 # New methods
 def format_message(self, **kwargs) -> dict: ...
-def format_observation_messages(self, message: dict, outputs: list[dict], template_vars: dict | None = None) -> list[dict]: ...
+def format_observation_messages(
+    self, message: dict, outputs: list[dict], template_vars: dict | None = None
+) -> list[dict]: ...
 def serialize(self) -> dict: ...
 ```
 
@@ -196,6 +199,7 @@ def serialize(self) -> dict: ...
 ```python
 # Changed signature
 def execute(self, action: dict, cwd: str = "") -> dict[str, Any]: ...  # was: (command: str) -> dict[str, str]
+
 
 # New method
 def serialize(self) -> dict: ...
@@ -209,8 +213,10 @@ model: Model
 env: Environment
 messages: list[dict]
 
+
 # Changed return type
 def run(self, task: str, **kwargs) -> dict: ...  # was: tuple[str, str]
+
 
 # New method
 def save(self, path: Path | None, *extra_dicts) -> dict: ...
@@ -218,7 +224,7 @@ def save(self, path: Path | None, *extra_dicts) -> dict: ...
 
 ### Exception changes
 
-All flow control exceptions now inherit from `InterruptAgentFlow` and moved to `minisweagent.exceptions`:
+All flow control exceptions now inherit from `InterruptAgentFlow` and moved to `mr_deed.exceptions`:
 
 ```python
 InterruptAgentFlow (base)
@@ -236,10 +242,10 @@ InterruptAgentFlow (base)
 
 ```python
 # Old
-from minisweagent.agents.default import Submitted, FormatError
+from mr_deed.agents.default import Submitted, FormatError
 
 # New
-from minisweagent.exceptions import Submitted, FormatError
+from mr_deed.exceptions import Submitted, FormatError
 ```
 
 ### Agent.run() return value

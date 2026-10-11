@@ -2,10 +2,10 @@
 
 !!! note "Extra Models"
 
-    - [Read roulette.py on GitHub](https://github.com/swe-agent/mini-swe-agent/blob/main/src/minisweagent/models/extra/roulette.py)
+    - [Read roulette.py on GitHub](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/models/extra/roulette.py)
 
 These are advanced "meta-models" that combine or modify the behavior of other models.
 
-::: minisweagent.models.extra.roulette
+::: mr_deed.models.extra.roulette
 
 {% include-markdown "../../_footer.md" %}

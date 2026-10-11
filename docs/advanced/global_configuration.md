@@ -29,7 +29,7 @@ or to update specific settings:
 ```
 mini-extra config set KEY VALUE
 # e.g.,
-mini-extra config set MSWEA_MODEL_NAME "anthropic/claude-sonnet-4-5-20250929"
+mini-extra config set MRDEED_MODEL_NAME "anthropic/claude-sonnet-4-5-20250929"
 mini-extra config set ANTHROPIC_API_KEY "sk-..."
 ```
 
@@ -64,14 +64,14 @@ setx KEY "value"
 ```bash
 # Default model name
 # (default: not set)
-MSWEA_MODEL_NAME="anthropic/claude-sonnet-4-5-20250929"
+MRDEED_MODEL_NAME="anthropic/claude-sonnet-4-5-20250929"
 ```
 
 To ignore errors from cost tracking checks (for example for free models), set:
 
 ```bash
 # CAREFUL: This can lead to unmanaged spending!
-MSWEA_COST_TRACKING="ignore_errors"
+MRDEED_COST_TRACKING="ignore_errors"
 ```
 
 To register extra models to litellm (see [local models](../models/local_models.md) for more details), you can either specify the path in the agent file, or set
@@ -85,15 +85,15 @@ Global cost limits:
 ```bash
 # Global limit on number of model calls (0 = no limit)
 # (default: 0)
-MSWEA_GLOBAL_CALL_LIMIT="100"
+MRDEED_GLOBAL_CALL_LIMIT="100"
 
 # Global cost limit in dollars (0 = no limit)
 # (default: 0)
-MSWEA_GLOBAL_COST_LIMIT="10.00"
+MRDEED_GLOBAL_COST_LIMIT="10.00"
 
 # Number of retry attempts for model API calls
 # (default: 10)
-MSWEA_MODEL_RETRY_STOP_AFTER_ATTEMPT="10"
+MRDEED_MODEL_RETRY_STOP_AFTER_ATTEMPT="10"
 ```
 
 ## Default config files
@@ -101,15 +101,15 @@ MSWEA_MODEL_RETRY_STOP_AFTER_ATTEMPT="10"
 ```bash
 # Set a custom directory for agent config files in addition to the builtin ones
 # This allows to specify them by names
-MSWEA_CONFIG_DIR="/path/to/your/own/config/dir"
+MRDEED_CONFIG_DIR="/path/to/your/own/config/dir"
 
 # Config path for mini run script
 # (default: package_dir / "config" / "mini.yaml")
-MSWEA_MINI_CONFIG_PATH="/path/to/your/own/config"
+MRDEED_MINI_CONFIG_PATH="/path/to/your/own/config"
 
 # Custom style path for trajectory inspector
 # (default: package_dir / "config" / "inspector.tcss")
-MSWEA_INSPECTOR_STYLE_PATH="/path/to/your/inspector/style.tcss"
+MRDEED_INSPECTOR_STYLE_PATH="/path/to/your/inspector/style.tcss"
 ```
 
 ### Settings for environments
@@ -117,23 +117,23 @@ MSWEA_INSPECTOR_STYLE_PATH="/path/to/your/inspector/style.tcss"
 ```bash
 # Path/name to the singularity/apptainer executable
 # (default: "singularity")
-MSWEA_SINGULARITY_EXECUTABLE="singularity"
+MRDEED_SINGULARITY_EXECUTABLE="singularity"
 
 # Path/name to the docker executable
 # (default: "docker")
-MSWEA_DOCKER_EXECUTABLE="docker"
+MRDEED_DOCKER_EXECUTABLE="docker"
 
 # Path/name to the bubblewrap executable
 # (default: "bwrap")
-MSWEA_BUBBLEWRAP_EXECUTABLE="bwrap"
+MRDEED_BUBBLEWRAP_EXECUTABLE="bwrap"
 ```
 
 ## Default run files
 
 ```bash
 # Default run script entry point for the main CLI
-# (default: "minisweagent.run.mini")
-MSWEA_DEFAULT_RUN="minisweagent.run.mini"
+# (default: "mr_deed.run.mini")
+MRDEED_DEFAULT_RUN="mr_deed.run.mini"
 ```
 
 {% include-markdown "_footer.md" %}

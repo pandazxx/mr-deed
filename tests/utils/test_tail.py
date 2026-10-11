@@ -1,6 +1,6 @@
 import time
 
-from minisweagent.utils.tail import tail_file_to_console
+from mr_deed.utils.tail import tail_file_to_console
 
 
 def test_tail_file_to_console_prints_lines_appended_during_the_context(tmp_path, capsys):

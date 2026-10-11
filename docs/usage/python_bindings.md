@@ -2,7 +2,7 @@
 
 !!! abstract "Overview"
 
-    This page shows the most basic example of how to use mini-SWE-agent as a Python library.
+    This page shows the most basic example of how to use mr-deed as a Python library.
     For more advanced usage, subclassing, and mix & match of components, see [subclassing and more](../advanced/cookbook.md).
 
 ## Hello world
@@ -10,9 +10,9 @@
 ```python
 import logging
 
-from minisweagent.agents.default import DefaultAgent
-from minisweagent.models import get_model
-from minisweagent.environments.local import LocalEnvironment
+from mr_deed.agents.default import DefaultAgent
+from mr_deed.models import get_model
+from mr_deed.environments.local import LocalEnvironment
 
 logging.basicConfig(level=logging.DEBUG)
 task = "Write a hello world program"

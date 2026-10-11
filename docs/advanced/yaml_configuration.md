@@ -14,7 +14,7 @@ Configuration files look like this:
 ??? note "Configuration file"
 
     ```yaml
-    --8<-- "src/minisweagent/config/mini.yaml"
+    --8<-- "src/mr_deed/config/mini.yaml"
     ```
 
 We use the following top-level keys:
@@ -30,7 +30,7 @@ Different agent classes might have slightly different configuration options.
 You can find the full list of options in the [API reference](../reference/agents/default.md).
 
 To use a different agent class, you can set the `agent_class` key to the name of the agent class you want to use
-or even to an import path (to use your own custom agent class even if it is not yet part of the mini-SWE-agent package).
+or even to an import path (to use your own custom agent class even if it is not yet part of the mr-deed package).
 
 ### Prompt templates
 
@@ -89,7 +89,7 @@ Make sure to use the appropriate model class and matching configuration.
 
 ### Custom Action Parsing from Text
 
-mini-SWE-agent can parse actions from markdown code blocks (` ```mswea_bash_command ... ``` `) or from tool calls.
+mr-deed can parse actions from markdown code blocks (` ```mrdeed_bash_command ... ``` `) or from tool calls.
 You can customize this behavior by setting the `action_regex` field to support different formats like XML.
 
 !!! warning "Important"
@@ -102,7 +102,7 @@ You can customize this behavior by setting the `action_regex` field to support d
     This example uses the same structure as the default mini.yaml config, but with `<action>` tags instead of markdown code blocks:
 
     ```yaml
-    --8<-- "src/minisweagent/config/benchmarks/swebench_xml.yaml"
+    --8<-- "src/mr_deed/config/benchmarks/swebench_xml.yaml"
     ```
 
     You can also directly load this config by specifying `--config swebench_xml`.
@@ -115,12 +115,12 @@ You can customize this behavior by setting the `action_regex` field to support d
 
     ```yaml
     model:
-      action_regex: ```mswea_bash_command\s*\n(.*?)\n```
+      action_regex: ```mrdeed_bash_command\s*\n(.*?)\n```
     agent:
       system_template: |
         Your response must contain exactly ONE bash code block.
 
-        ```mswea_bash_command
+        ```mrdeed_bash_command
         your_command_here
         ```
     ```
