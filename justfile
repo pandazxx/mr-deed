@@ -34,7 +34,7 @@ mini *args:
 
 # Run the `hermes` agent, which delegates the task to codex or claude (e.g. `just hermes -t "..." --tool codex`)
 hermes *args:
-    uv run python -m minisweagent.run.extra.hermes {{ args }}
+    uv run python -m mr_deed.run.extra.hermes {{ args }}
 
 # Serve the documentation locally
 docs:

@@ -1,16 +1,16 @@
-# mini-SWE-agent overview
+# mr-deed overview
 
-- mini-SWE-agent implements an AI software engineering agent that solves github issues and similar programming challenges
+- mr-deed implements an AI software engineering agent that solves github issues and similar programming challenges
 - The idea of this project is to write the simplest, smallest, most readable agent.
 
 The project is structured as
 
 ```bash
-minisweagent/__init__  # Protocols/interfaces for all base classes
-minisweagent/agents  # Agent control flow & loop
-minisweagent/environments  # Executing agent actions
-minisweagent/models  # LM interfaces
-minisweagent/run  # Run scripts that serve as an entry point
+mr_deed/__init__  # Protocols/interfaces for all base classes
+mr_deed/agents  # Agent control flow & loop
+mr_deed/environments  # Executing agent actions
+mr_deed/models  # LM interfaces
+mr_deed/run  # Run scripts that serve as an entry point
 ```
 
 - The project embraces polymorphism: Every individual class should be simple, but we offer alternatives

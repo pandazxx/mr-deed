@@ -4,8 +4,8 @@ from unittest.mock import patch
 import pytest
 import typer
 
-from minisweagent.models.test_models import DeterministicToolcallModel, make_toolcall_output
-from minisweagent.run.extra.hermes import DEFAULT_CONFIG_FILE, main
+from mr_deed.models.test_models import DeterministicToolcallModel, make_toolcall_output
+from mr_deed.run.extra.hermes import DEFAULT_CONFIG_FILE, main
 
 
 def _make_tc_model(outputs_spec: list[tuple[str, list[dict]]]) -> DeterministicToolcallModel:
@@ -32,7 +32,7 @@ def _run_hermes(tool: str, work_model: str, task: str, output) -> dict:
         [
             (
                 "Delegating to work_llm.",
-                [{"command": "printf 'work_llm did the thing' > /tmp/mswea_hermes_output.txt"}],
+                [{"command": "printf 'work_llm did the thing' > /tmp/mrdeed_hermes_output.txt"}],
             ),
             (
                 "Digesting the result.",
@@ -40,7 +40,7 @@ def _run_hermes(tool: str, work_model: str, task: str, output) -> dict:
             ),
         ]
     )
-    with patch("minisweagent.run.extra.hermes.get_model", return_value=model):
+    with patch("mr_deed.run.extra.hermes.get_model", return_value=model):
         return main(
             task=task,
             tool=tool,

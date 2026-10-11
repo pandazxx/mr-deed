@@ -3,16 +3,16 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from minisweagent import package_dir
-from minisweagent.models.test_models import DeterministicModel, make_output
-from minisweagent.run.benchmarks.swebench_single import main
+from mr_deed import package_dir
+from mr_deed.models.test_models import DeterministicModel, make_output
+from mr_deed.run.benchmarks.swebench_single import main
 
 
 def _make_model_from_fixture(text_outputs: list[str], cost_per_call: float = 1.0, **kwargs) -> DeterministicModel:
     """Create a DeterministicModel from trajectory fixture data (raw text outputs)."""
 
     def parse_command(text: str) -> list[dict]:
-        match = re.search(r"```mswea_bash_command\s*\n(.*?)\n```", text, re.DOTALL)
+        match = re.search(r"```mrdeed_bash_command\s*\n(.*?)\n```", text, re.DOTALL)
         return [{"command": match.group(1)}] if match else []
 
     return DeterministicModel(
@@ -26,13 +26,13 @@ def test_swebench_single_cost_limit_zero_is_preserved():
     """Test that an explicit cost_limit=0 is not dropped during config merge."""
     with (
         patch(
-            "minisweagent.run.benchmarks.swebench_single.load_dataset",
+            "mr_deed.run.benchmarks.swebench_single.load_dataset",
             return_value=[{"instance_id": "instance", "problem_statement": "test"}],
         ),
-        patch("minisweagent.run.benchmarks.swebench_single.get_sb_environment") as mock_get_env,
-        patch("minisweagent.run.benchmarks.swebench_single.get_model") as mock_get_model,
-        patch("minisweagent.run.benchmarks.swebench_single.get_agent") as mock_get_agent,
-        patch("minisweagent.run.benchmarks.swebench_single.get_config_from_spec", return_value={}),
+        patch("mr_deed.run.benchmarks.swebench_single.get_sb_environment") as mock_get_env,
+        patch("mr_deed.run.benchmarks.swebench_single.get_model") as mock_get_model,
+        patch("mr_deed.run.benchmarks.swebench_single.get_agent") as mock_get_agent,
+        patch("mr_deed.run.benchmarks.swebench_single.get_config_from_spec", return_value={}),
     ):
         mock_get_model.return_value = object()
         mock_get_env.return_value = object()
@@ -65,11 +65,9 @@ def test_swebench_single_end_to_end(github_test_data, tmp_path, container_execut
     model_responses = github_test_data["model_responses"]
 
     with (
-        patch("minisweagent.run.benchmarks.swebench_single.get_model") as mock_get_model,
-        patch("minisweagent.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
-        patch(
-            "minisweagent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""
-        ),
+        patch("mr_deed.run.benchmarks.swebench_single.get_model") as mock_get_model,
+        patch("mr_deed.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
+        patch("mr_deed.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""),
         patch("builtins.input", return_value=""),  # For LimitsExceeded handling
     ):
         mock_get_model.return_value = _make_model_from_fixture(model_responses, cost_per_call=0.1)
@@ -106,11 +104,9 @@ def test_swebench_single_end_to_end_exit_immediately(github_test_data, tmp_path,
     model_responses = github_test_data["model_responses"]
 
     with (
-        patch("minisweagent.run.benchmarks.swebench_single.get_model") as mock_get_model,
-        patch("minisweagent.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
-        patch(
-            "minisweagent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""
-        ),
+        patch("mr_deed.run.benchmarks.swebench_single.get_model") as mock_get_model,
+        patch("mr_deed.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
+        patch("mr_deed.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""),
         patch("builtins.input", return_value=""),  # For LimitsExceeded handling
     ):
         mock_get_model.return_value = _make_model_from_fixture(model_responses, cost_per_call=0.1)

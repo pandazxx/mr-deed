@@ -7,7 +7,7 @@
         Use pip to install `mini` in your current environment:
 
         ```bash
-        pip install mini-swe-agent
+        pip install mr-deed
         ```
 
         And try our command line interface
@@ -25,14 +25,14 @@
         Quickly install + run:
 
         ```bash
-        uvx mini-swe-agent  # CLI
-        uvx --from mini-swe-agent mini-extra  # extra utilities
+        uvx mr-deed  # CLI
+        uvx --from mr-deed mini-extra  # extra utilities
         ```
 
         Permanently install
 
         ```bash
-        uv tool install mini-swe-agent
+        uv tool install mr-deed
         # then
         mini  # CLI
         mini-extra  # extra utilities
@@ -47,15 +47,15 @@
 
         ```bash
         # CLI
-        pipx run mini-swe-agent
+        pipx run mr-deed
         # Extra utilities
-        pipx run --spec mini-swe-agent mini-extra
+        pipx run --spec mr-deed mini-extra
         ```
 
         or for a persistent installation (recommended):
 
         ```bash
-        pipx install mini-swe-agent
+        pipx install mr-deed
         # then
         mini  # CLI
         mini-extra  # extra utilities
@@ -68,8 +68,8 @@
         For development or if you want to customize the agent:
 
         ```bash
-        git clone https://github.com/SWE-agent/mini-swe-agent.git
-        cd mini-swe-agent
+        git clone https://github.com/pandazxx/mr-deed.git
+        cd mr-deed
         pip install -e .
         ```
 
@@ -80,10 +80,10 @@
         mini-extra  # extra utilities
         ```
 
-        Or pick a [run script](https://github.com/SWE-agent/mini-swe-agent/tree/main/src/minisweagent/run):
+        Or pick a [run script](https://github.com/pandazxx/mr-deed/tree/main/src/mr_deed/run):
 
         ```bash
-        python src/minisweagent/run/hello_world.py
+        python src/mr_deed/run/hello_world.py
         ```
 
         If you are planning to contribute, please also install the dev dependencies
@@ -103,7 +103,7 @@
 
 !!! note "Changelog"
 
-    Please see the [github release notes](https://github.com/SWE-agent/mini-swe-agent/releases) for recent changes.
+    Please see the [github release notes](https://github.com/pandazxx/mr-deed/releases) for recent changes.
 
 !!! info "Upgrading to v2?"
 
@@ -111,7 +111,7 @@
 
 !!! example "Example Prompts"
 
-    Try mini-SWE-agent with these example prompts:
+    Try mr-deed with these example prompts:
 
     - Implement a Sudoku solver in python in the `sudoku` folder. Make sure the codebase is modular and well tested with pytest.
     - Please run pytest on the current project, discover failing unittests and help me fix them. Always make sure to test the final solution.

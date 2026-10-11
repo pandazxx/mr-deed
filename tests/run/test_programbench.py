@@ -16,13 +16,13 @@ import pytest
 import yaml
 from pydantic import BaseModel
 
-from minisweagent import package_dir
-from minisweagent.environments.docker import DockerEnvironment
-from minisweagent.exceptions import Submitted
-from minisweagent.run.benchmarks.programbench import copy_submission, main
+from mr_deed import package_dir
+from mr_deed.environments.docker import DockerEnvironment
+from mr_deed.exceptions import Submitted
+from mr_deed.run.benchmarks.programbench import copy_submission, main
 
 # Lightweight image used for the real-docker tests. Already cached on machines
-# that run mini-swe-agent's docker test suite (see tests/environments/test_docker.py).
+# that run mr-deed's docker test suite (see tests/environments/test_docker.py).
 _TEST_IMAGE = "python:3.11"
 
 
@@ -191,7 +191,7 @@ def test_programbench_end_to_end_real_docker(real_programbench_first_instance, t
     # CI runners may not have. Override run_args with the bare minimum (keeping
     # ``--network none`` since the agent is supposed to run offline).
     run_args_override = 'environment.run_args=["--rm", "--network", "none"]'
-    with patch("minisweagent.run.benchmarks.programbench.get_model", side_effect=lambda **kw: _SubmittingModel()):
+    with patch("mr_deed.run.benchmarks.programbench.get_model", side_effect=lambda **kw: _SubmittingModel()):
         main(
             slice_spec="",
             filter_spec=f"^{instance['instance_id']}$",
@@ -231,8 +231,8 @@ def test_programbench_skip_existing_real_docker(real_programbench_first_instance
     (tmp_path / iid / "submission.tar.gz").write_bytes(b"pre-existing")
 
     with (
-        patch("minisweagent.run.benchmarks.programbench.get_model") as mock_get_model,
-        patch("minisweagent.run.benchmarks.programbench.get_environment") as mock_get_env,
+        patch("mr_deed.run.benchmarks.programbench.get_model") as mock_get_model,
+        patch("mr_deed.run.benchmarks.programbench.get_environment") as mock_get_env,
     ):
         main(
             slice_spec="",

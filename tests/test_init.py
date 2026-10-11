@@ -1,4 +1,4 @@
-"""Tests for minisweagent.__init__."""
+"""Tests for mr_deed.__init__."""
 
 import os
 import subprocess
@@ -10,19 +10,19 @@ def test_startup_banner_survives_non_utf8_stdout(tmp_path):
     env = {
         **os.environ,
         "PYTHONIOENCODING": "cp1252",
-        "MSWEA_SILENT_STARTUP": "",
-        "MSWEA_GLOBAL_CONFIG_DIR": str(tmp_path),
+        "MRDEED_SILENT_STARTUP": "",
+        "MRDEED_GLOBAL_CONFIG_DIR": str(tmp_path),
     }
-    result = subprocess.run([sys.executable, "-c", "import minisweagent"], capture_output=True, text=True, env=env)
+    result = subprocess.run([sys.executable, "-c", "import mr_deed"], capture_output=True, text=True, env=env)
     assert result.returncode == 0, result.stderr
 
 
 def _import_and_print_env(tmp_path, var: str, extra_env: dict) -> subprocess.CompletedProcess:
-    env = {**os.environ, "MSWEA_SILENT_STARTUP": "1", "MSWEA_GLOBAL_CONFIG_DIR": str(tmp_path / "global")}
+    env = {**os.environ, "MRDEED_SILENT_STARTUP": "1", "MRDEED_GLOBAL_CONFIG_DIR": str(tmp_path / "global")}
     env.pop(var, None)
     env.update(extra_env)
     return subprocess.run(
-        [sys.executable, "-c", f"import minisweagent, os; print(os.environ.get({var!r}))"],
+        [sys.executable, "-c", f"import mr_deed, os; print(os.environ.get({var!r}))"],
         capture_output=True,
         text=True,
         env=env,
@@ -32,9 +32,9 @@ def _import_and_print_env(tmp_path, var: str, extra_env: dict) -> subprocess.Com
 
 def test_local_env_file_is_loaded_on_import(tmp_path):
     """A project-local .env (e.g. copied from .env.example) is picked up on import, without needing `just`."""
-    (tmp_path / ".env").write_text("MSWEA_TEST_DOTENV_PROBE=from-local-dotenv\n")
+    (tmp_path / ".env").write_text("MRDEED_TEST_DOTENV_PROBE=from-local-dotenv\n")
 
-    result = _import_and_print_env(tmp_path, "MSWEA_TEST_DOTENV_PROBE", {})
+    result = _import_and_print_env(tmp_path, "MRDEED_TEST_DOTENV_PROBE", {})
 
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == "from-local-dotenv"
@@ -42,9 +42,9 @@ def test_local_env_file_is_loaded_on_import(tmp_path):
 
 def test_local_env_file_does_not_override_the_shell_environment(tmp_path):
     """An already-exported env var must win over the project-local .env (python-dotenv's default behavior)."""
-    (tmp_path / ".env").write_text("MSWEA_TEST_DOTENV_PROBE=from-local-dotenv\n")
+    (tmp_path / ".env").write_text("MRDEED_TEST_DOTENV_PROBE=from-local-dotenv\n")
 
-    result = _import_and_print_env(tmp_path, "MSWEA_TEST_DOTENV_PROBE", {"MSWEA_TEST_DOTENV_PROBE": "from-shell"})
+    result = _import_and_print_env(tmp_path, "MRDEED_TEST_DOTENV_PROBE", {"MRDEED_TEST_DOTENV_PROBE": "from-shell"})
 
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == "from-shell"

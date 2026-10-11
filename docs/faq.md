@@ -2,13 +2,13 @@
 
 ## General
 
-!!! question "Does mini-SWE-agent work on my system?"
+!!! question "Does mr-deed work on my system?"
 
-    mini-SWE-agent should work on any system that has a bash shell or uses a container runtime (e.g., docker, singularity, apptainer, etc.) to emulate one.
+    mr-deed should work on any system that has a bash shell or uses a container runtime (e.g., docker, singularity, apptainer, etc.) to emulate one.
 
-??? question "Should I use mini-SWE-agent or swe-agent?"
+??? question "Should I use mr-deed or swe-agent?"
 
-    You should use `mini-swe-agent` if
+    You should use `mr-deed` if
 
     - You want a quick command line tool that works locally
     - You want an agent with a very simple control flow
@@ -36,9 +36,9 @@
     - Executes actions with `subprocess.run` — every action is completely independent (as opposed to keeping a stateful shell session running).
       This [avoids so many issues](#why-no-shell-session), trust me.
 
-??? question "What are the limitations of mini-SWE-agent?"
+??? question "What are the limitations of mr-deed?"
 
-    mini-SWE-agent can be extended trivially in various ways, the following assumes the default setup.
+    mr-deed can be extended trivially in various ways, the following assumes the default setup.
     As reflected in the high SWE-bench scores, none of the following limitations are a problem in practice.
 
     - No tools other than bash
@@ -61,7 +61,7 @@
 
 !!! question "What models do you support?"
 
-    Currently, mini-SWE-agent supports all models that are supported by [litellm](https://github.com/BerriAI/litellm)
+    Currently, mr-deed supports all models that are supported by [litellm](https://github.com/BerriAI/litellm)
     or [OpenRouter](https://openrouter.ai/)
     and we're open to extend the `models/` directory with more models should `litellm` not support them.
 
@@ -87,11 +87,11 @@
 
 !!! question "How can I set the default model?"
 
-    The default model is stored in the config/environment as `MSWEA_MODEL_NAME`.
+    The default model is stored in the config/environment as `MRDEED_MODEL_NAME`.
     To permanently change it:
 
     ```bash
-    mini-extra config set MSWEA_MODEL_NAME anthropic/claude-sonnet-4-5-20250929
+    mini-extra config set MRDEED_MODEL_NAME anthropic/claude-sonnet-4-5-20250929
     ```
 
     Alternatively, you can directly edit the `.env` file in the config directory

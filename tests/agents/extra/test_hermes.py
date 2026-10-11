@@ -2,13 +2,13 @@ from pathlib import Path
 
 import yaml
 
-from minisweagent.agents.extra.hermes import HermesAgent
-from minisweagent.environments.local import LocalEnvironment
-from minisweagent.models.test_models import DeterministicToolcallModel, make_toolcall_output
+from mr_deed.agents.extra.hermes import HermesAgent
+from mr_deed.environments.local import LocalEnvironment
+from mr_deed.models.test_models import DeterministicToolcallModel, make_toolcall_output
 
 
 def _config() -> dict:
-    config_path = Path("src/minisweagent/config/extra/hermes.yaml")
+    config_path = Path("src/mr_deed/config/extra/hermes.yaml")
     return yaml.safe_load(config_path.read_text())["agent"]
 
 

@@ -1,6 +1,6 @@
 import json
 
-from minisweagent.utils.traceable import TaskTrace, new_task_id, redact_env
+from mr_deed.utils.traceable import TaskTrace, new_task_id, redact_env
 
 
 def test_new_task_id_returns_unique_ids():

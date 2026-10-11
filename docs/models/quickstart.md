@@ -84,7 +84,7 @@ There are several ways to set your API keys:
 
 * **Recommended**: `mini-extra config setup` (should be run the first time you run `mini`) can set the default model for you
 * All command line interfaces allow you to set the model name with `-m` or `--model`.
-* In addition, you can set the default model with `mini-extra config set MSWEA_MODEL_NAME <model-name>`, by editing the global [config file](../advanced/global_configuration.md) (shortcut: `mini-extra config edit`), or by setting the `MSWEA_MODEL_NAME` environment variable.
+* In addition, you can set the default model with `mini-extra config set MRDEED_MODEL_NAME <model-name>`, by editing the global [config file](../advanced/global_configuration.md) (shortcut: `mini-extra config edit`), or by setting the `MRDEED_MODEL_NAME` environment variable.
 * You can also set your model in a config file (key `model_name` under `model`).
 * If you want to use local models, please check this [guide](local_models.md).
 
@@ -303,9 +303,9 @@ For example:
 On top, there's a few more exotic model classes that you can use:
 
 * **`deterministic`** ([`DeterministicModel`](../reference/models/test_models.md)) - Returns predefined responses for testing and development purposes.
-* **`minisweagent.models.extra.roulette.RouletteModel` and `minisweagent.models.extra.roulette.InterleavingModel`** ([`RouletteModel`](../reference/models/extra.md) and [`InterleavingModel`](../reference/models/extra.md)) - Randomly selects or interleaves multiple configured models for each query. See [this blog post](https://www.swebench.com/SWE-bench/blog/2025/08/19/mini-roulette/) for more details.
+* **`mr_deed.models.extra.roulette.RouletteModel` and `mr_deed.models.extra.roulette.InterleavingModel`** ([`RouletteModel`](../reference/models/extra.md) and [`InterleavingModel`](../reference/models/extra.md)) - Randomly selects or interleaves multiple configured models for each query. See [this blog post](https://www.swebench.com/SWE-bench/blog/2025/08/19/mini-roulette/) for more details.
 
-As with the last two, you can also specify any import path to your own custom model class (even if it is not yet part of the mini-SWE-agent package).
+As with the last two, you can also specify any import path to your own custom model class (even if it is not yet part of the mr-deed package).
 
 --8<-- "docs/_footer.md"
 

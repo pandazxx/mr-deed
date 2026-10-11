@@ -3,11 +3,11 @@ from pathlib import Path
 import pytest
 import yaml
 
-from minisweagent.agents.default import DefaultAgent
-from minisweagent.environments.local import LocalEnvironment
-from minisweagent.exceptions import FormatError
-from minisweagent.models import GLOBAL_MODEL_STATS
-from minisweagent.models.test_models import (
+from mr_deed.agents.default import DefaultAgent
+from mr_deed.environments.local import LocalEnvironment
+from mr_deed.exceptions import FormatError
+from mr_deed.models import GLOBAL_MODEL_STATS
+from mr_deed.models.test_models import (
     DeterministicModel,
     DeterministicResponseAPIToolcallModel,
     DeterministicToolcallModel,
@@ -60,7 +60,7 @@ def is_observation_message(msg: dict) -> bool:
 @pytest.fixture
 def default_config():
     """Load default agent config from config/default.yaml"""
-    config_path = Path("src/minisweagent/config/default.yaml")
+    config_path = Path("src/mr_deed/config/default.yaml")
     with open(config_path) as f:
         config = yaml.safe_load(f)
     return config["agent"]
@@ -69,7 +69,7 @@ def default_config():
 @pytest.fixture
 def toolcall_config():
     """Load toolcall agent config from config/mini.yaml"""
-    config_path = Path("src/minisweagent/config/mini.yaml")
+    config_path = Path("src/mr_deed/config/mini.yaml")
     with open(config_path) as f:
         config = yaml.safe_load(f)
     return config["agent"]

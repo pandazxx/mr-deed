@@ -1,0 +1,29 @@
+"""Agent implementations for mr-deed."""
+
+import copy
+import importlib
+
+from mr_deed import Agent, Environment, Model
+
+_AGENT_MAPPING = {
+    "default": "mr_deed.agents.default.DefaultAgent",
+    "interactive": "mr_deed.agents.interactive.InteractiveAgent",
+    "hermes": "mr_deed.agents.extra.hermes.HermesAgent",
+}
+
+
+def get_agent_class(spec: str) -> type[Agent]:
+    full_path = _AGENT_MAPPING.get(spec, spec)
+    try:
+        module_name, class_name = full_path.rsplit(".", 1)
+        module = importlib.import_module(module_name)
+        return getattr(module, class_name)
+    except (ValueError, ImportError, AttributeError):
+        msg = f"Unknown agent type: {spec} (resolved to {full_path}, available: {_AGENT_MAPPING})"
+        raise ValueError(msg)
+
+
+def get_agent(model: Model, env: Environment, config: dict, *, default_type: str = "") -> Agent:
+    config = copy.deepcopy(config)
+    agent_class = get_agent_class(config.pop("agent_class", default_type))
+    return agent_class(model, env, **config)

@@ -2,14 +2,14 @@
 
 !!! note "Singularity Environment class"
 
-    - [Read on GitHub](https://github.com/swe-agent/mini-swe-agent/blob/main/src/minisweagent/environments/singularity.py)
+    - [Read on GitHub](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/environments/singularity.py)
 
     ??? note "Full source code"
 
         ```python
-        --8<-- "src/minisweagent/environments/singularity.py"
+        --8<-- "src/mr_deed/environments/singularity.py"
         ```
 
-::: minisweagent.environments.singularity
+::: mr_deed.environments.singularity
 
 {% include-markdown "../../_footer.md" %}

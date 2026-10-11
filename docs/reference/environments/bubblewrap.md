@@ -1,5 +1,5 @@
 # Bubblewrap
 
-::: minisweagent.environments.extra.bubblewrap
+::: mr_deed.environments.extra.bubblewrap
 
 {% include-markdown "../../_footer.md" %}

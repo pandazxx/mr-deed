@@ -1,5 +1,5 @@
-site_name: mini-SWE-agent documentation
-site_url: https://mini-swe-agent.com
+site_name: mr-deed documentation
+site_url: https://pandazxx.github.io/mr-deed
 theme:
   name: material
   icon:
@@ -152,8 +152,8 @@ plugins:
               - "!^_"
               - "!^model_config"
               - "!^model_post_init"
-repo_url: https://github.com/SWE-agent/mini-SWE-agent
-repo_name: SWE-agent/mini-SWE-agent
+repo_url: https://github.com/pandazxx/mr-deed
+repo_name: pandazxx/mr-deed
 edit_uri: edit/main/docs/
 extra_javascript:
   - assets/js/sh-annotation.js

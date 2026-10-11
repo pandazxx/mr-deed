@@ -2,7 +2,7 @@
 
 !!! note "SWE-ReX Modal Environment class"
 
-    - [Read on GitHub](https://github.com/swe-agent/mini-swe-agent/blob/main/src/minisweagent/environments/extra/swerex_modal.py)
+    - [Read on GitHub](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/environments/extra/swerex_modal.py)
     - Requires [Modal](https://modal.com) account and authentication
 
 This environment executes commands in [Modal](https://modal.com) sandboxes using [SWE-ReX](https://github.com/swe-agent/swe-rex).
@@ -11,7 +11,7 @@ This environment executes commands in [Modal](https://modal.com) sandboxes using
 
 1. Install the full dependencies:
    ```bash
-   pip install "mini-swe-agent[full]"
+   pip install "mr-deed[full]"
    ```
 
 2. Set up Modal authentication:
@@ -24,7 +24,7 @@ This environment executes commands in [Modal](https://modal.com) sandboxes using
 Evaluate GPT-5 mini on SWE-bench using Modal:
 ```
 mini-extra swebench \
-    --config src/minisweagent/config/extra/swebench_modal.yaml \
+    --config src/mr_deed/config/extra/swebench_modal.yaml \
     --subset verified \
     --split test \
     --workers 100 \

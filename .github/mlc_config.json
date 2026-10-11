@@ -7,6 +7,15 @@
       "pattern": "https://platform.openai.com/docs/.*"
     },
     {
+      "pattern": "https://pandazxx.github.io/mr-deed/?.*"
+    },
+    {
+      "pattern": "https://join.slack.com/?.*"
+    },
+    {
+      "pattern": "https://www.swebench.com/SWE-bench/blog/2025/08/19/mini-roulette/"
+    },
+    {
       "pattern": ".*localhost.*"
     },
     {

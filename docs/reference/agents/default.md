@@ -2,30 +2,30 @@
 
 !!! note "DefaultAgent class"
 
-    - [Read on GitHub](https://github.com/swe-agent/mini-swe-agent/blob/main/src/minisweagent/agents/default.py)
+    - [Read on GitHub](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/agents/default.py)
 
     ??? note "Full source code"
 
         ```python
-        --8<-- "src/minisweagent/agents/default.py"
+        --8<-- "src/mr_deed/agents/default.py"
         ```
 
 !!! tip "Understanding the control flow"
 
     Check out the [control flow guide](../../advanced/control_flow.md) for a visual explanation of the agent's control flow.
 
-::: minisweagent.agents.default.AgentConfig
+::: mr_deed.agents.default.AgentConfig
 
-::: minisweagent.agents.default.DefaultAgent
+::: mr_deed.agents.default.DefaultAgent
 
-::: minisweagent.exceptions.InterruptAgentFlow
+::: mr_deed.exceptions.InterruptAgentFlow
 
-::: minisweagent.exceptions.Submitted
+::: mr_deed.exceptions.Submitted
 
-::: minisweagent.exceptions.LimitsExceeded
+::: mr_deed.exceptions.LimitsExceeded
 
-::: minisweagent.exceptions.FormatError
+::: mr_deed.exceptions.FormatError
 
-::: minisweagent.exceptions.UserInterruption
+::: mr_deed.exceptions.UserInterruption
 
 {% include-markdown "../../_footer.md" %}

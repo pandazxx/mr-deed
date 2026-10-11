@@ -11,21 +11,21 @@
     Make sure to follow the dev setup instructions in [quickstart.md](../quickstart.md).
 
 We provide several different entry points to the agent,
-for example [hello world](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/run/hello_world.py),
-or the [default when calling `mini`](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/run/mini.py).
+for example [hello world](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/run/hello_world.py),
+or the [default when calling `mini`](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/run/mini.py).
 
 Want to cook up your custom version and the config is not enough?
 Just follow the recipe below:
 
-1. What's the control flow you need? Pick an [agent class](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/agents) (e.g., [simplest example](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/agents/default.py), [with human in the loop](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/agents/interactive.py))
-2. How should actions be executed? Pick an [environment class](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/environments) (e.g., [local](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/environments/local.py), or [docker](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/environments/docker.py))
-3. How is the LM queried? Pick a [model class](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/models) (e.g., [litellm](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/models/litellm_model.py))
-4. How to invoke the agent? Bind them all together in a [run script](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/run), possibly reading from a [config](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/config) (e.g., [hello world](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/run/hello_world.py), or [`mini` entry point](https://github.com/SWE-agent/mini-swe-agent/blob/main/src/minisweagent/run/mini.py))
+1. What's the control flow you need? Pick an [agent class](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/agents) (e.g., [simplest example](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/agents/default.py), [with human in the loop](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/agents/interactive.py))
+2. How should actions be executed? Pick an [environment class](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/environments) (e.g., [local](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/environments/local.py), or [docker](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/environments/docker.py))
+3. How is the LM queried? Pick a [model class](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/models) (e.g., [litellm](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/models/litellm_model.py))
+4. How to invoke the agent? Bind them all together in a [run script](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/run), possibly reading from a [config](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/config) (e.g., [hello world](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/run/hello_world.py), or [`mini` entry point](https://github.com/pandazxx/mr-deed/blob/main/src/mr_deed/run/mini.py))
 
 We aim to keep all of these components very simple, but offer lots of choice between them -- enough to cover a broad range of
 things that you might want to do.
 
-You can override the default entry point by setting the `MSWEA_DEFAULT_RUN` environment variable to the import path of your run script.
+You can override the default entry point by setting the `MRDEED_DEFAULT_RUN` environment variable to the import path of your run script.
 
 ## Hello world
 
@@ -38,9 +38,9 @@ See [Python bindings](../usage/python_bindings.md) for the most basic example.
 === "Hello world (use automatic model selection)"
 
     ```python
-    from minisweagent.agents.default import DefaultAgent
-    from minisweagent.models import get_model
-    from minisweagent.environments.local import LocalEnvironment
+    from mr_deed.agents.default import DefaultAgent
+    from mr_deed.models import get_model
+    from mr_deed.environments.local import LocalEnvironment
 
     model_name = "anthropic/claude-sonnet-4-5-20250929"
 
@@ -54,9 +54,9 @@ See [Python bindings](../usage/python_bindings.md) for the most basic example.
 === "Hello world (Litellm)"
 
     ```python
-    from minisweagent.agents.default import DefaultAgent
-    from minisweagent.models.litellm_model import LitellmModel
-    from minisweagent.environments.local import LocalEnvironment
+    from mr_deed.agents.default import DefaultAgent
+    from mr_deed.models.litellm_model import LitellmModel
+    from mr_deed.environments.local import LocalEnvironment
 
     model_name = "gpt-4o"
 
@@ -72,7 +72,7 @@ See [Python bindings](../usage/python_bindings.md) for the most basic example.
 === "Hello world with local execution"
 
     ```python
-    from minisweagent.environments.local import LocalEnvironment
+    from mr_deed.environments.local import LocalEnvironment
 
     agent = DefaultAgent(
         LitellmModel(model_name=model_name),
@@ -83,7 +83,7 @@ See [Python bindings](../usage/python_bindings.md) for the most basic example.
 === "Hello world with docker execution"
 
     ```python
-    from minisweagent.environments.docker import DockerEnvironment
+    from mr_deed.environments.docker import DockerEnvironment
 
     agent = DefaultAgent(
         LitellmModel(model_name=model_name),
@@ -96,9 +96,9 @@ See [Python bindings](../usage/python_bindings.md) for the most basic example.
 === "Default agent"
 
     ```python
-    from minisweagent.agents.default import DefaultAgent
-    from minisweagent.models import get_model
-    from minisweagent.environments.local import LocalEnvironment
+    from mr_deed.agents.default import DefaultAgent
+    from mr_deed.models import get_model
+    from mr_deed.environments.local import LocalEnvironment
 
     agent = DefaultAgent(
         get_model(input_model_name=model_name),
@@ -109,9 +109,9 @@ See [Python bindings](../usage/python_bindings.md) for the most basic example.
 === "Human in the loop"
 
     ```python
-    from minisweagent.agents.interactive import InteractiveAgent
-    from minisweagent.models import get_model
-    from minisweagent.environments.local import LocalEnvironment
+    from mr_deed.agents.interactive import InteractiveAgent
+    from mr_deed.models import get_model
+    from mr_deed.environments.local import LocalEnvironment
 
     agent = InteractiveAgent(
         get_model(input_model_name=model_name),
@@ -129,12 +129,14 @@ An agent that uses python function for some actions:
 === "Subclassing the agent"
 
     ```python
-    from minisweagent.agents.default import DefaultAgent
+    from mr_deed.agents.default import DefaultAgent
     import shlex
+
 
     def python_function(*args) -> dict:
         ...
         return {"output": "..."}
+
 
     class AgentWithPythonFunctions(DefaultAgent):
         def execute_actions(self, message: dict) -> list[dict]:
@@ -142,9 +144,9 @@ An agent that uses python function for some actions:
                 command = action.get("command", "")
                 if command.startswith("python_function"):
                     args = shlex.split(command.removeprefix("python_function").strip())
-                    return self.add_messages(self.model.format_observation_messages(
-                        message, [python_function(*args)], self.get_template_vars()
-                    ))
+                    return self.add_messages(
+                        self.model.format_observation_messages(message, [python_function(*args)], self.get_template_vars())
+                    )
             # everything else works as usual
             return super().execute_actions(message)
     ```
@@ -153,13 +155,15 @@ An agent that uses python function for some actions:
 === "Subclassing the environment"
 
     ```python
-    from minisweagent.agents.default import DefaultAgent
-    from minisweagent.environments.local import LocalEnvironment
+    from mr_deed.agents.default import DefaultAgent
+    from mr_deed.environments.local import LocalEnvironment
     import shlex
+
 
     def python_function(*args) -> dict:
         ...
         return {"output": "..."}
+
 
     class EnvironmentWithPythonFunctions(LocalEnvironment):
         def execute(self, action: dict, cwd: str = "") -> dict:
@@ -169,6 +173,7 @@ An agent that uses python function for some actions:
                 return python_function(*args)
             # all other commands are executed as usual
             return super().execute(action, cwd)
+
 
     agent = DefaultAgent(
         LitellmModel(model_name=model_name),
@@ -181,8 +186,9 @@ An agent that exits when the `submit` command is issued:
 === "Subclassing the agent"
 
     ```python
-    from minisweagent.agents.default import DefaultAgent
-    from minisweagent.exceptions import Submitted
+    from mr_deed.agents.default import DefaultAgent
+    from mr_deed.exceptions import Submitted
+
 
     class AgentQuitsOnSubmit(DefaultAgent):
         def execute_actions(self, message: dict) -> list[dict]:
@@ -190,30 +196,36 @@ An agent that exits when the `submit` command is issued:
                 if action.get("command", "") == "submit":
                     # The `Submitted` exception will be caught by the agent and
                     # the final output will be printed.
-                    raise Submitted({
-                        "role": "exit",
-                        "content": "The agent has finished its task.",
-                        "extra": {"exit_status": "Submitted", "submission": ""},
-                    })
+                    raise Submitted(
+                        {
+                            "role": "exit",
+                            "content": "The agent has finished its task.",
+                            "extra": {"exit_status": "Submitted", "submission": ""},
+                        }
+                    )
             return super().execute_actions(message)
     ```
 
 === "Subclassing the environment"
 
     ```python
-    from minisweagent.agents.default import DefaultAgent
-    from minisweagent.environments.local import LocalEnvironment
-    from minisweagent.exceptions import Submitted
+    from mr_deed.agents.default import DefaultAgent
+    from mr_deed.environments.local import LocalEnvironment
+    from mr_deed.exceptions import Submitted
+
 
     class EnvironmentQuitsOnSubmit(LocalEnvironment):
         def execute(self, action: dict, cwd: str = "") -> dict:
             if action.get("command", "") == "submit":
-                raise Submitted({
-                    "role": "exit",
-                    "content": "The agent has finished its task.",
-                    "extra": {"exit_status": "Submitted", "submission": ""},
-                })
+                raise Submitted(
+                    {
+                        "role": "exit",
+                        "content": "The agent has finished its task.",
+                        "extra": {"exit_status": "Submitted", "submission": ""},
+                    }
+                )
             return super().execute(action, cwd)
+
 
     agent = DefaultAgent(
         LitellmModel(model_name=model_name),
@@ -228,9 +240,10 @@ An agent that validates actions before execution (also an example of how to use 
 
     ```python
     import re
-    from minisweagent.agents.default import DefaultAgent, AgentConfig
-    from minisweagent.exceptions import FormatError
+    from mr_deed.agents.default import DefaultAgent, AgentConfig
+    from mr_deed.exceptions import FormatError
     from pydantic import BaseModel
+
 
     class ValidatingAgentConfig(AgentConfig):
         forbidden_patterns: list[str] = [
@@ -238,6 +251,7 @@ An agent that validates actions before execution (also an example of how to use 
             r"sudo.*passwd",
             r"mkfs\.",
         ]
+
 
     class ValidatingAgent(DefaultAgent):
         def __init__(self, *args, **kwargs):
@@ -248,9 +262,9 @@ An agent that validates actions before execution (also an example of how to use 
                 command = action.get("command", "")
                 for pattern in self.config.forbidden_patterns:
                     if re.search(pattern, command, re.IGNORECASE):
-                        raise FormatError(self.model.format_message(
-                            role="user", content="Action blocked: forbidden pattern detected"
-                        ))
+                        raise FormatError(
+                            self.model.format_message(role="user", content="Action blocked: forbidden pattern detected")
+                        )
             return super().execute_actions(message)
     ```
 
@@ -258,9 +272,10 @@ An agent that validates actions before execution (also an example of how to use 
 
     ```python
     import re
-    from minisweagent.agents.default import DefaultAgent
-    from minisweagent.environments.local import LocalEnvironment, LocalEnvironmentConfig
-    from minisweagent.models.litellm_model import LitellmModel
+    from mr_deed.agents.default import DefaultAgent
+    from mr_deed.environments.local import LocalEnvironment, LocalEnvironmentConfig
+    from mr_deed.models.litellm_model import LitellmModel
+
 
     class EnvironmentWithForbiddenPatternsConfig(LocalEnvironmentConfig):
         forbidden_patterns: list[str] = [
@@ -268,6 +283,7 @@ An agent that validates actions before execution (also an example of how to use 
             r"sudo.*passwd",
             r"mkfs\.",
         ]
+
 
     class EnvironmentWithForbiddenPatterns(LocalEnvironment):
         def __init__(self, *args, **kwargs):
@@ -280,15 +296,16 @@ An agent that validates actions before execution (also an example of how to use 
                     return {"output": "Action blocked: forbidden pattern detected", "returncode": 1}
             return super().execute(action, cwd)
 
+
     agent = DefaultAgent(
         LitellmModel(model_name=model_name),
         EnvironmentWithForbiddenPatterns(),
     )
     ```
 
-### Running mini-swe-agent on Ray
+### Running mr-deed on Ray
 
 [This blog post](https://www.anyscale.com/blog/massively-parallel-agentic-simulations-with-ray)
-describes how to parallelize mini-swe-agent runs with Ray.
+describes how to parallelize mr-deed runs with Ray.
 
 {% include-markdown "_footer.md" %}

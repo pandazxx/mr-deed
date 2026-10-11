@@ -2,13 +2,13 @@
 
 !!! abstract "Overview"
 
-    mini-SWE-agent saves run results in JSON format. This page documents the structure of these output files.
+    mr-deed saves run results in JSON format. This page documents the structure of these output files.
 
 ## Trajectory files (`.traj.json`)
 
 !!! warning "v2.0 format changes"
 
-    The output format changed in v2.0 (`trajectory_format: mini-swe-agent-1.1`). See the [v2 migration guide](../advanced/v2_migration.md) for more information.
+    The output format changed in v2.0 (`trajectory_format: mr-deed-1.1`). See the [v2 migration guide](../advanced/v2_migration.md) for more information.
 
 !!! tip "Viewing trajectory files"
 
@@ -27,13 +27,13 @@ Trajectory files contain the full history of an agent run, including all message
     },
     "config": {
       "agent": { ... },  // agent configuration
-      "agent_type": "minisweagent.agents.default.DefaultAgent",
+      "agent_type": "mr_deed.agents.default.DefaultAgent",
       "model": { ... },  // model configuration
-      "model_type": "minisweagent.models.litellm_model.LitellmModel",
+      "model_type": "mr_deed.models.litellm_model.LitellmModel",
       "environment": { ... },  // environment configuration
-      "environment_type": "minisweagent.environments.local.LocalEnvironment"
+      "environment_type": "mr_deed.environments.local.LocalEnvironment"
     },
-    "mini_version": "2.0.0",  // version of mini-SWE-agent used
+    "mini_version": "2.0.0",  // version of mr-deed used
     "exit_status": "Submitted",  // final status (Submitted, LimitsExceeded, etc.)
     "submission": "..."  // final output/patch submitted by the agent (if any)
   },
@@ -43,12 +43,12 @@ Trajectory files contain the full history of an agent run, including all message
     {"role": "assistant", "content": "..."},
     ...
   ],
-  "trajectory_format": "mini-swe-agent-1.1"  // format version identifier
+  "trajectory_format": "mr-deed-1.1"  // format version identifier
 }
 ```
 
 
-Messages follow the [OpenAI chat format](https://platform.openai.com/docs/api-reference/chat) with an additional `extra` field for mini-SWE-agent metadata. Models may add other fields to messages (e.g., `tool_calls`, `reasoning_content`).
+Messages follow the [OpenAI chat format](https://platform.openai.com/docs/api-reference/chat) with an additional `extra` field for mr-deed metadata. Models may add other fields to messages (e.g., `tool_calls`, `reasoning_content`).
 
 !!! note "Toolcall models"
     When using toolcall-based models (e.g., `LitellmToolcallModel`), the roles differ slightly: assistant messages include `tool_calls` instead of content, and observation messages use `role: "tool"` with a `tool_call_id` field.
@@ -63,7 +63,7 @@ Messages follow the [OpenAI chat format](https://platform.openai.com/docs/api-re
 // Assistant message (model response with parsed actions)
 {
   "role": "assistant",
-  "content": "Let me check the files...\n\n```mswea_bash_command\nls -la\n```",
+  "content": "Let me check the files...\n\n```mrdeed_bash_command\nls -la\n```",
   "extra": {
     "actions": [{"command": "ls -la"}],  // parsed actions to execute
     "cost": 0.003,  // cost of this API call

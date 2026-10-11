@@ -1,8 +1,8 @@
 import re
 from unittest.mock import patch
 
-from minisweagent.models.test_models import DeterministicModel, make_output
-from minisweagent.run.mini import DEFAULT_CONFIG_FILE, main
+from mr_deed.models.test_models import DeterministicModel, make_output
+from mr_deed.run.mini import DEFAULT_CONFIG_FILE, main
 from tests.conftest import assert_observations_match
 
 
@@ -10,7 +10,7 @@ def _make_model_from_fixture(text_outputs: list[str], cost_per_call: float = 1.0
     """Create a DeterministicModel from trajectory fixture data (raw text outputs)."""
 
     def parse_command(text: str) -> list[dict]:
-        match = re.search(r"```mswea_bash_command\s*\n(.*?)\n```", text, re.DOTALL)
+        match = re.search(r"```mrdeed_bash_command\s*\n(.*?)\n```", text, re.DOTALL)
         return [{"command": match.group(1)}] if match else []
 
     return DeterministicModel(
@@ -27,12 +27,10 @@ def test_local_end_to_end(local_test_data):
     expected_observations = local_test_data["expected_observations"]
 
     with (
-        patch("minisweagent.run.mini.configure_if_first_time"),
-        patch("minisweagent.models.litellm_model.LitellmModel") as mock_model_class,
-        patch("minisweagent.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
-        patch(
-            "minisweagent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""
-        ),
+        patch("mr_deed.run.mini.configure_if_first_time"),
+        patch("mr_deed.models.litellm_model.LitellmModel") as mock_model_class,
+        patch("mr_deed.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
+        patch("mr_deed.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""),
         patch("builtins.input", return_value=""),  # For LimitsExceeded handling
     ):
         mock_model_class.return_value = _make_model_from_fixture(model_responses)
