@@ -61,7 +61,12 @@ class TestParseToolcallActions:
         tool_call.function.arguments = '{"command": "echo hello"}'
         tool_call.id = "call_123"
         assert parse_toolcall_actions([tool_call], format_error_template="{{ error }}") == [
-            {"name": "bash", "command": "echo hello", "tool_call_id": "call_123"}
+            {
+                "name": "bash",
+                "arguments": {"command": "echo hello"},
+                "command": "echo hello",
+                "tool_call_id": "call_123",
+            }
         ]
 
     def test_multiple_valid_tool_calls(self):
@@ -74,8 +79,18 @@ class TestParseToolcallActions:
             calls.append(tc)
         result = parse_toolcall_actions(calls, format_error_template="{{ error }}")
         assert len(result) == 3
-        assert result[0] == {"name": "bash", "command": "cmd0", "tool_call_id": "call_0"}
-        assert result[2] == {"name": "bash", "command": "cmd2", "tool_call_id": "call_2"}
+        assert result[0] == {
+            "name": "bash",
+            "arguments": {"command": "cmd0"},
+            "command": "cmd0",
+            "tool_call_id": "call_0",
+        }
+        assert result[2] == {
+            "name": "bash",
+            "arguments": {"command": "cmd2"},
+            "command": "cmd2",
+            "tool_call_id": "call_2",
+        }
 
     def test_unknown_tool_raises_format_error(self):
         tool_call = MagicMock()
@@ -176,13 +191,21 @@ class TestHostTools:
         }
 
     def test_host_tool_call_is_parsed_with_name_and_arguments(self):
-        expected = [{"name": "add", "a": 1, "b": 2, "tool_call_id": "call_1"}]
+        expected = [{"name": "add", "arguments": {"a": 1, "b": 2}, "tool_call_id": "call_1"}]
         tool_call = _tool_call("add", '{"a": 1, "b": 2}')
         assert parse_toolcall_actions([tool_call], format_error_template="{{ error }}", tools=[ADD_TOOL]) == expected
         item = {"type": "function_call", "call_id": "call_1", "name": "add", "arguments": '{"a": 1, "b": 2}'}
         assert (
             parse_toolcall_actions_response([item], format_error_template="{{ error }}", tools=[ADD_TOOL]) == expected
         )
+
+    def test_tool_arguments_may_be_called_name_or_tool_call_id(self):
+        """Regression test: arguments must not share a namespace with the action's own keys."""
+        tool = Tool("create", "Create", {"type": "object", "properties": {"name": {"type": "string"}}}, lambda a: a)
+        tool_call = _tool_call("create", '{"name": "engineer", "tool_call_id": "x"}', call_id="c1")
+        assert parse_toolcall_actions([tool_call], format_error_template="{{ error }}", tools=[tool]) == [
+            {"name": "create", "arguments": {"name": "engineer", "tool_call_id": "x"}, "tool_call_id": "c1"}
+        ]
 
     def test_host_tool_is_unknown_unless_registered(self):
         with pytest.raises(FormatError) as exc:

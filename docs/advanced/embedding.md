@@ -12,10 +12,10 @@
 ## Importing the library
 
 `import mr_deed` (and the agents, models and environments) has no side effects on your process:
-nothing is printed and `os.environ` is left alone.
-Only the CLI entry points in `mr_deed.run` load the [global config file](global_configuration.md) and a
-project-local `.env` into the environment and print the startup banner, so set API keys and
-`MRDEED_*` variables yourself before creating models.
+nothing is printed, `os.environ` is left alone and nothing is written to disk.
+Only the CLI entry points in `mr_deed.run` create the global config directory, load the
+[global config file](global_configuration.md) and a project-local `.env` into the environment and print
+the startup banner, so set API keys and `MRDEED_*` variables yourself before creating models.
 
 ## Continuing a conversation
 
@@ -67,13 +67,14 @@ agent = DefaultAgent(model, env, on_event=on_event, **config["agent"])
 | --- | --- | --- |
 | `system`, `user` | the system/instance/continuation prompt is added | the message |
 | `assistant` | the model answered (including reasoning content, if the API returned any) | the message |
-| `action` | right before an action is executed | the action: `name`, its arguments and `tool_call_id` |
+| `action` | right before an action is executed | the action: `name`, `arguments` and `tool_call_id` (bash actions also carry `command`) |
 | `observation` | an action produced its result (or could not run) | the observation message |
 | `format_error` | the model output could not be parsed | the feedback message sent to the model |
 | `exit` | the run ended | the exit record; `payload["extra"]["exit_status"]` is one of `Submitted`, `LimitsExceeded`, `TimeExceeded`, `Cancelled`, `RepeatedFormatError` or the name of an uncaught exception, `payload["extra"]["submission"]` the result |
 
 Message payloads are the very dict objects that are appended to `agent.messages`, so the event stream
 and the trajectory can never diverge. Exactly one `exit` event is emitted per run or continuation.
+Handlers must not raise: an exception from `on_event` ends the run like any other uncaught error.
 
 ## Cancelling a run
 
@@ -93,8 +94,9 @@ agent.cancel()  # from the UI thread
 
 * `LocalEnvironment.interrupt()` kills the whole process group of the running command (the same
   mechanism as the timeout path); the observation records the partial output and the kill signal's
-  return code. Other environments finish the current command (or time out) before the agent notices the
-  cancellation.
+  return code. If the cancel arrives just before the command is spawned, the interrupt stays pending and
+  kills the command as soon as it starts; `run()`/`continue_run()` clear a pending interrupt first. Other
+  environments finish the current command (or time out) before the agent notices the cancellation.
 * Cancellation is cooperative: a run that is inside a model request stops right after it returns.
 * `cancel()` and `cancel_event.set()` are safe to call from any thread. Clear the event before reusing
   the agent for another run.
@@ -131,12 +133,15 @@ agent.continue_run(next_task)
 
 * The model is offered `[bash, *agent.tools]` on every query. `bash` stays the primary tool and is
   executed by the environment; every other tool name is routed to its handler by `DefaultAgent.execute_action`.
-* The handler receives the parsed arguments (the action without `name` and `tool_call_id`) and returns
-  an observation dict: `output` (string) and optionally `returncode` (default 0) and `exception_info`.
-  It is rendered with the model's `observation_template` and added to the trajectory like a bash result,
-  so the history stays linear and the trajectory format is unchanged.
+* The handler receives the parsed arguments (`action["arguments"]`) and returns an observation dict:
+  `output` (string) and optionally `returncode` (default 0) and `exception_info`. It is rendered with the
+  model's `observation_template` and added to the trajectory like a bash result, so the history stays
+  linear and the trajectory format is unchanged.
+* A handler that raises does not end the run: like a failing bash command, the exception becomes an
+  observation with `returncode -1` and the error in `exception_info`, so the model can react. Raise an
+  `InterruptAgentFlow` subclass (for example `Submitted`) to end the run deliberately.
 * Calls to unknown tools, invalid JSON or missing required arguments are reported back to the model as a
-  format error instead of crashing the run. Argument names `name` and `tool_call_id` are reserved.
+  format error instead of crashing the run.
 * Host tools are not available with text-based (code-block parsing) models, which raise a `ValueError`
   when given tools.
 

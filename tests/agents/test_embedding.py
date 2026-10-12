@@ -42,7 +42,8 @@ def _tc_model(*steps: tuple[str, str, dict]) -> _RecordingToolcallModel:
     outputs = []
     for i, (content, name, args) in enumerate(steps):
         call = {"id": f"call_{i}", "type": "function", "function": {"name": name, "arguments": json.dumps(args)}}
-        outputs.append(make_toolcall_output(content, [call], [{"name": name, **args, "tool_call_id": f"call_{i}"}]))
+        action = {"name": name, "arguments": args, "tool_call_id": f"call_{i}"}
+        outputs.append(make_toolcall_output(content, [call], [action | args if name == "bash" else action]))
     return _RecordingToolcallModel(outputs=outputs)
 
 
@@ -174,7 +175,7 @@ def test_host_tools_are_routed_by_name_and_observed(toolcall_config):
         0,
     )
     assert "<output>\n3</output>" in observation["content"]
-    assert ("action", {"name": "add", "a": 1, "b": 2, "tool_call_id": "call_0"}) in events
+    assert ("action", {"name": "add", "arguments": {"a": 1, "b": 2}, "tool_call_id": "call_0"}) in events
 
 
 def test_cancel_event_stops_before_the_first_query(toolcall_config, tmp_path):
@@ -201,7 +202,10 @@ def test_cancel_during_an_action_skips_the_remaining_actions(toolcall_config):
         {"id": "c0", "type": "function", "function": {"name": "trip", "arguments": "{}"}},
         {"id": "c1", "type": "function", "function": {"name": "bash", "arguments": '{"command": "echo never"}'}},
     ]
-    actions = [{"name": "trip", "tool_call_id": "c0"}, {"name": "bash", "command": "echo never", "tool_call_id": "c1"}]
+    actions = [
+        {"name": "trip", "arguments": {}, "tool_call_id": "c0"},
+        {"name": "bash", "arguments": {"command": "echo never"}, "command": "echo never", "tool_call_id": "c1"},
+    ]
     agent = DefaultAgent(
         DeterministicToolcallModel(outputs=[make_toolcall_output("Two actions", calls, actions)]),
         LocalEnvironment(),
@@ -234,3 +238,58 @@ def test_cancel_from_another_thread_kills_the_running_command(toolcall_config):
     assert results[0]["exit_status"] == "Cancelled"
     assert agent.messages[3]["extra"]["returncode"] == -signal.SIGKILL  # killed, not timed out
     assert agent.n_calls == 1
+
+
+def test_host_tool_arguments_may_be_called_name(toolcall_config):
+    seen = []
+    tool = Tool(
+        "create", "Create something", {"type": "object", "properties": {"name": {"type": "string"}}}, seen.append
+    )
+    agent = DefaultAgent(
+        _tc_model(("Creating", "create", {"name": "engineer"}), ("Done", "bash", {"command": SUBMIT.format("ok")})),
+        LocalEnvironment(),
+        tools=[tool],
+        **toolcall_config,
+    )
+    assert agent.run("task")["exit_status"] == "Submitted"
+    assert seen == [{"name": "engineer"}]
+
+
+def test_failing_host_tool_becomes_an_observation(toolcall_config):
+    def flaky(args: dict) -> dict:
+        raise ConnectionError("master unreachable")
+
+    agent = DefaultAgent(
+        _tc_model(("Calling", "flaky", {}), ("Done", "bash", {"command": SUBMIT.format("recovered")})),
+        LocalEnvironment(),
+        tools=[Tool("flaky", "Talks to the host", NO_ARGS, flaky)],
+        **toolcall_config,
+    )
+    assert agent.run("task")["submission"] == "recovered\n"
+    observation = agent.messages[3]
+    assert observation["extra"]["returncode"] == -1
+    assert "ConnectionError: master unreachable" in observation["content"]
+
+
+def test_cancel_between_the_cancel_check_and_the_command_start_still_kills_it(toolcall_config):
+    """`on_event("action")` runs after the cancel check but before the command is spawned: a cancel() from there
+    must not let the command run to completion."""
+    agent = DefaultAgent(
+        _tc_model(("Sleep", "bash", {"command": "sleep 30"})),
+        LocalEnvironment(timeout=60),
+        on_event=lambda kind, payload: kind == "action" and agent.cancel(),
+        **toolcall_config,
+    )
+    start = time.time()
+    assert agent.run("task")["exit_status"] == "Cancelled"
+    assert time.time() - start < 10
+    assert agent.messages[3]["extra"]["returncode"] == -signal.SIGKILL
+
+    # A pending interrupt from the cancelled run must not kill the next run's first command
+    agent.cancel_event.clear()
+    agent.on_event = lambda kind, payload: None
+    agent.model = _tc_model(
+        ("Echo", "bash", {"command": "echo alive"}), ("Done", "bash", {"command": SUBMIT.format("ok")})
+    )
+    assert agent.run("task")["exit_status"] == "Submitted"
+    assert agent.messages[3]["extra"]["returncode"] == 0

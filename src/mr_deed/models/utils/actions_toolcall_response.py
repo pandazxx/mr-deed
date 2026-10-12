@@ -66,7 +66,8 @@ def parse_toolcall_actions_response(
     output: list, *, format_error_template: str, template_kwargs: dict | None = None, tools: Sequence[Tool] = ()
 ) -> list[dict]:
     """Parse tool calls from a Responses API response output into actions
-    `{"name": ..., <arguments>, "tool_call_id": ...}`.
+    `{"name": ..., "arguments": {...}, "tool_call_id": ...}` (bash actions additionally carry their `command`
+    at the top level).
 
     Filters for function_call items and parses them.
     Response API format has name/arguments at top level with call_id:
@@ -111,7 +112,8 @@ def parse_toolcall_actions_response(
                 error=error_msg.strip(), actions=[], has_tool_calls=True, **template_kwargs
             )
             raise FormatError(_format_error_message(error_text))
-        actions.append({"name": name, **args, "tool_call_id": tool_call.get("call_id") or tool_call.get("id")})
+        action = {"name": name, "arguments": args, "tool_call_id": tool_call.get("call_id") or tool_call.get("id")}
+        actions.append(action | {"command": args["command"]} if name == "bash" else action)
     return actions
 
 

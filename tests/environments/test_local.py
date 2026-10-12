@@ -273,3 +273,15 @@ def test_interrupt_kills_the_running_command_from_another_thread():
     assert time.time() - start < 10
     assert (result["returncode"], result["output"], result["exception_info"]) == (-signal.SIGKILL, "", "")
     env.interrupt()  # nothing is running: no-op
+
+
+def test_interrupt_before_the_command_starts_stays_pending_until_reset():
+    env = LocalEnvironment(timeout=60)
+    env.interrupt()
+    start = time.time()
+    assert env.execute({"command": "sleep 30; echo done"})["returncode"] == -signal.SIGKILL
+    assert time.time() - start < 10
+    assert env.execute({"command": "echo alive"})["output"] == "alive\n"  # the pending interrupt was consumed
+    env.interrupt()
+    env.reset_interrupt()
+    assert env.execute({"command": "echo alive"})["returncode"] == 0

@@ -40,7 +40,8 @@ def tool_schema(tool: Tool) -> dict:
 def parse_toolcall_actions(
     tool_calls: list, *, format_error_template: str, template_kwargs: dict | None = None, tools: Sequence[Tool] = ()
 ) -> list[dict]:
-    """Parse tool calls from the response into actions `{"name": ..., <arguments>, "tool_call_id": ...}`.
+    """Parse tool calls from the response into actions `{"name": ..., "arguments": {...}, "tool_call_id": ...}`
+    (bash actions additionally carry their `command` at the top level).
     Raises FormatError for tools other than bash and `tools`, invalid JSON or missing required arguments.
 
     ``template_kwargs`` are extra variables exposed to ``format_error_template`` (e.g.
@@ -85,7 +86,8 @@ def parse_toolcall_actions(
                     "extra": {"interrupt_type": "FormatError"},
                 }
             )
-        actions.append({"name": name, **args, "tool_call_id": tool_call.id})
+        action = {"name": name, "arguments": args, "tool_call_id": tool_call.id}
+        actions.append(action | {"command": args["command"]} if name == "bash" else action)
     return actions
 
 

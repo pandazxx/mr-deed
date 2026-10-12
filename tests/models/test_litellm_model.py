@@ -51,7 +51,9 @@ class TestLitellmModel:
 
         model = LitellmModel(model_name="gpt-4")
         result = model.query([{"role": "user", "content": "list files"}])
-        assert result["extra"]["actions"] == [{"name": "bash", "command": "ls -la", "tool_call_id": "call_abc"}]
+        assert result["extra"]["actions"] == [
+            {"name": "bash", "arguments": {"command": "ls -la"}, "command": "ls -la", "tool_call_id": "call_abc"}
+        ]
 
     @patch("mr_deed.models.litellm_model.litellm.completion")
     @patch("mr_deed.models.litellm_model.litellm.cost_calculator.completion_cost")
@@ -68,7 +70,7 @@ class TestLitellmModel:
 
         result = LitellmModel(model_name="gpt-4").query([{"role": "user", "content": "add"}], tools=[tool])
         assert mock_completion.call_args.kwargs["tools"] == [BASH_TOOL, tool_schema(tool)]
-        assert result["extra"]["actions"] == [{"name": "add", "a": 1, "tool_call_id": "call_1"}]
+        assert result["extra"]["actions"] == [{"name": "add", "arguments": {"a": 1}, "tool_call_id": "call_1"}]
 
     @patch("mr_deed.models.litellm_model.litellm.completion")
     @patch("mr_deed.models.litellm_model.litellm.cost_calculator.completion_cost")

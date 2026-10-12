@@ -152,6 +152,8 @@ class DefaultAgent:
     def _start_run(self, task: str, **kwargs) -> None:
         self.extra_template_vars |= {"task": task, **kwargs}
         self.cost, self.n_calls, self.n_consecutive_format_errors, self._start_time = 0.0, 0, 0, time.time()
+        if reset_interrupt := getattr(self.env, "reset_interrupt", None):
+            reset_interrupt()  # a cancel of an earlier run must not kill this run's first command
 
     def _run_steps(self) -> dict:
         while True:
@@ -219,7 +221,7 @@ class DefaultAgent:
 
     def cancel(self) -> None:
         """Stop the run from another thread: the next query or action exits with exit_status "Cancelled" and the
-        command currently executing is killed if the environment supports `interrupt()`."""
+        command currently executing (or about to start) is killed if the environment supports `interrupt()`."""
         self.cancel_event.set()
         if interrupt := getattr(self.env, "interrupt", None):
             interrupt()
@@ -248,14 +250,19 @@ class DefaultAgent:
 
     def execute_action(self, action: dict) -> dict:
         """Execute a single action: `bash` in the environment, any other tool name through its `Tool.handler`
-        (which only needs to return `output`; `returncode` defaults to 0)."""
+        (which only needs to return `output`; `returncode` defaults to 0). Like a failing bash command, a handler
+        that raises becomes an observation with returncode -1 instead of ending the run."""
         self._raise_if_cancelled()
         self.on_event("action", action)
         if (name := action.get("name", "bash")) == "bash":
             return self.env.execute(action)
         handler = {tool.name: tool.handler for tool in self.tools}[name]
-        arguments = {k: v for k, v in action.items() if k not in ("name", "tool_call_id")}
-        return {"output": "", "returncode": 0, "exception_info": ""} | handler(arguments)
+        try:
+            return {"output": "", "returncode": 0, "exception_info": ""} | handler(action["arguments"])
+        except InterruptAgentFlow:
+            raise  # handlers may deliberately submit or interrupt
+        except Exception as e:
+            return {"output": "", "returncode": -1, "exception_info": f"{type(e).__name__}: {e}"}
 
     def serialize(self, *extra_dicts) -> dict:
         """Serialize agent state to a json-compatible nested dictionary for saving."""

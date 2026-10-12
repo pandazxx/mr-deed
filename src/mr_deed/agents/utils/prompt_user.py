@@ -4,6 +4,7 @@ from prompt_toolkit.shortcuts import PromptSession
 
 from mr_deed import global_config_dir
 
+global_config_dir.mkdir(parents=True, exist_ok=True)
 _history = FileHistory(global_config_dir / "interactive_history.txt")
 prompt_session = PromptSession(history=_history)
 _multiline_prompt_session = PromptSession(history=_history, multiline=True)

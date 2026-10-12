@@ -2,6 +2,7 @@ import os
 import platform
 import signal
 import subprocess
+import threading
 from contextlib import suppress
 from typing import Any
 
@@ -22,6 +23,8 @@ class LocalEnvironment:
         """This class executes bash commands directly on the local machine."""
         self.config = config_class(**kwargs)
         self._process: subprocess.Popen | None = None
+        self._interrupt_pending = False
+        self._lock = threading.Lock()
 
     def execute(self, action: dict, cwd: str = "", *, timeout: int | None = None) -> dict[str, Any]:
         """Execute a command in the local environment and return the result as a dict."""
@@ -45,11 +48,20 @@ class LocalEnvironment:
         return output
 
     def interrupt(self) -> None:
-        """Kill the command currently executing, if any. Safe to call from another thread (see `DefaultAgent.cancel`);
-        `execute` then returns the partial output with the kill signal's return code."""
-        if process := self._process:
-            with suppress(ProcessLookupError):  # the command finished in the meantime
-                _kill_process_group(process)
+        """Kill the command currently executing; `execute` then returns the partial output with the kill signal's
+        return code. Without a running command the interrupt stays pending and kills the next command as soon as it
+        starts (see `reset_interrupt`). Safe to call from another thread (see `DefaultAgent.cancel`)."""
+        with self._lock:
+            if self._process is None:
+                self._interrupt_pending = True
+            else:
+                with suppress(ProcessLookupError):  # the command finished in the meantime
+                    _kill_process_group(self._process)
+
+    def reset_interrupt(self) -> None:
+        """Drop a pending interrupt (the agent calls this when a new run starts)."""
+        with self._lock:
+            self._interrupt_pending = False
 
     def _check_finished(self, output: dict):
         """Raises Submitted if the output indicates task completion."""
@@ -79,18 +91,22 @@ class LocalEnvironment:
 
     def _run(self, command: str, cwd: str, env: dict[str, str], timeout: int) -> subprocess.CompletedProcess[str]:
         """Like subprocess.run, but kills the whole process group on timeout so no children are orphaned."""
-        self._process = process = subprocess.Popen(
-            command,
-            shell=True,
-            text=True,
-            cwd=cwd,
-            env=env,
-            encoding="utf-8",
-            errors="replace",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            start_new_session=os.name == "posix",
-        )
+        with self._lock:  # spawn and register atomically, so an interrupt() can never fall between the two
+            self._process = process = subprocess.Popen(
+                command,
+                shell=True,
+                text=True,
+                cwd=cwd,
+                env=env,
+                encoding="utf-8",
+                errors="replace",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                start_new_session=os.name == "posix",
+            )
+            if self._interrupt_pending:
+                self._interrupt_pending = False
+                _kill_process_group(process)
         try:
             stdout, _ = process.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:
@@ -98,7 +114,8 @@ class LocalEnvironment:
             stdout, _ = process.communicate()
             raise subprocess.TimeoutExpired(command, timeout, output=stdout)
         finally:
-            self._process = None
+            with self._lock:
+                self._process = None
         return subprocess.CompletedProcess(command, process.returncode, stdout=stdout)
 
 
