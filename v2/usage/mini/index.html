@@ -1150,6 +1150,8 @@
       
         
       
+        
+      
     
     
     
@@ -1264,6 +1266,34 @@
     
   
     Subclassing and more
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../advanced/embedding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Embedding in a host process
   
 
     
@@ -3046,7 +3076,7 @@ You can also press <code>Ctrl+C</code> to interrupt the agent at any time, allow
     <span class="k">def</span><span class="w"> </span><span class="nf">_interrupt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">itype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"UserInterruption"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NoReturn</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">UserInterruption</span><span class="p">({</span><span class="s2">"role"</span><span class="p">:</span> <span class="s2">"user"</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="n">content</span><span class="p">,</span> <span class="s2">"extra"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"interrupt_type"</span><span class="p">:</span> <span class="n">itype</span><span class="p">}})</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">messages</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_messages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">messages</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
         <span class="c1"># Extend supermethod to print messages</span>
         <span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">messages</span><span class="p">:</span>
             <span class="n">role</span><span class="p">,</span> <span class="n">content</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"role"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">msg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">),</span> <span class="n">get_content_string</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -3059,7 +3089,7 @@ You can also press <code>Ctrl+C</code> to interrupt the agent at any time, allow
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">[bold green]</span><span class="si">{</span><span class="n">role</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span><span class="si">}</span><span class="s2">[/bold green]:</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">""</span><span class="p">,</span> <span class="n">highlight</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">highlight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">markup</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">add_messages</span><span class="p">(</span><span class="o">*</span><span class="n">messages</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">add_messages</span><span class="p">(</span><span class="o">*</span><span class="n">messages</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="c1"># Extend supermethod to handle human mode</span>
@@ -3130,17 +3160,17 @@ You can also press <code>Ctrl+C</code> to interrupt the agent at any time, allow
     <span class="k">def</span><span class="w"> </span><span class="nf">execute_actions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
         <span class="c1"># Override to handle user confirmation and confirm_exit, with try/finally to preserve partial outputs</span>
         <span class="n">actions</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"extra"</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"actions"</span><span class="p">,</span> <span class="p">[])</span>
-        <span class="n">commands</span> <span class="o">=</span> <span class="p">[</span><span class="n">action</span><span class="p">[</span><span class="s2">"command"</span><span class="p">]</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">]</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_ask_confirmation_or_interrupt</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ask_confirmation_or_interrupt</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">:</span>
-                <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">env</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">action</span><span class="p">))</span>
+                <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">execute_action</span><span class="p">(</span><span class="n">action</span><span class="p">))</span>
         <span class="k">except</span> <span class="n">Submitted</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"output"</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">messages</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"content"</span><span class="p">],</span> <span class="s2">"returncode"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"exception_info"</span><span class="p">:</span> <span class="s2">""</span><span class="p">})</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_for_new_task_or_submit</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_messages</span><span class="p">(</span>
-                <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">format_observation_messages</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template_vars</span><span class="p">())</span>
+                <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">format_observation_messages</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_template_vars</span><span class="p">()),</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"observation"</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span>
 
@@ -3165,14 +3195,16 @@ You can also press <code>Ctrl+C</code> to interrupt the agent at any time, allow
                 <span class="bp">self</span><span class="o">.</span><span class="n">_interrupt</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The user added a new task: </span><span class="si">{</span><span class="n">user_input</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">itype</span><span class="o">=</span><span class="s2">"UserNewTask"</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">e</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_should_ask_confirmation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"confirm"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">whitelist_actions</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_should_ask_confirmation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Only bash commands can be whitelisted; host tool calls are always confirmed in confirm mode."""</span>
+        <span class="n">command</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"command"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"confirm"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">command</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">whitelist_actions</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_ask_confirmation_or_interrupt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">commands</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_should_ask_confirmation</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">commands</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ask_confirmation_or_interrupt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_should_ask_confirmation</span><span class="p">(</span><span class="n">action</span><span class="p">)</span> <span class="k">for</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">):</span>
             <span class="k">return</span>
         <span class="n">prompt</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"[bold yellow]Execute </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span><span class="si">}</span><span class="s2"> action(s)?[/] [green][bold]Enter[/] to confirm[/], "</span>
+            <span class="sa">f</span><span class="s2">"[bold yellow]Execute </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span><span class="si">}</span><span class="s2"> action(s)?[/] [green][bold]Enter[/] to confirm[/], "</span>
             <span class="s2">"[red]type [bold]comment[/] to reject[/], or [blue][bold]/h[/] to show available commands[/]</span><span class="se">\n</span><span class="s2">"</span>
             <span class="s2">"[bold yellow]&gt;[/bold yellow] "</span>
         <span class="p">)</span>
