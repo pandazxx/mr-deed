@@ -1,8 +1,10 @@
 import json
 import logging
+from collections.abc import Sequence
 
 import requests
 
+from mr_deed import Tool
 from mr_deed.models.openrouter_model import (
     OpenRouterAPIError,
     OpenRouterAuthenticationError,
@@ -29,7 +31,12 @@ class OpenRouterTextbasedModel(OpenRouterModel):
         super().__init__(**kwargs)
         self.config = OpenRouterTextbasedModelConfig(**kwargs)
 
-    def _query(self, messages: list[dict[str, str]], **kwargs):
+    def query(self, messages: list[dict[str, str]], *, tools: Sequence[Tool] = (), **kwargs) -> dict:
+        if tools:
+            raise ValueError("Host tools require a tool-call model; text-based models only support bash.")
+        return super().query(messages, **kwargs)
+
+    def _query(self, messages: list[dict[str, str]], tools: Sequence[Tool] = (), **kwargs):
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
@@ -57,7 +64,7 @@ class OpenRouterTextbasedModel(OpenRouterModel):
         except requests.exceptions.RequestException as e:
             raise OpenRouterAPIError(f"Request failed: {e}") from e
 
-    def _parse_actions(self, response: dict) -> list[dict]:
+    def _parse_actions(self, response: dict, tools: Sequence[Tool] = ()) -> list[dict]:
         """Parse actions from the model response. Raises FormatError if not exactly one action."""
         content = response["choices"][0]["message"]["content"] or ""
         return parse_regex_actions(

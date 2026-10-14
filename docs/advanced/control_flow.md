@@ -36,7 +36,7 @@ flowchart TD
 
     subgraph execute_actions["<b><code>Agent.execute_actions(message)</code></b>"]
         direction TB
-        E2["<b><code>Environment.execute</code></b><br/>Also raises the Submitted exception if we're done"] --> E3["<b><code>Model.format_observation_messages</code></b>"]
+        E2["<b><code>Agent.execute_action</code></b><br/>bash → <code>Environment.execute</code> (raises Submitted if we're done)<br/>host tools → <code>Tool.handler</code>"] --> E3["<b><code>Model.format_observation_messages</code></b>"]
         E3 --> E4["<b><code>Agent.add_messages</code></b>"]
     end
 

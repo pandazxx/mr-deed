@@ -18,6 +18,8 @@
 
 ::: mr_deed.agents.default.DefaultAgent
 
+::: mr_deed.Tool
+
 ::: mr_deed.exceptions.InterruptAgentFlow
 
 ::: mr_deed.exceptions.Submitted
@@ -25,6 +27,8 @@
 ::: mr_deed.exceptions.LimitsExceeded
 
 ::: mr_deed.exceptions.FormatError
+
+::: mr_deed.exceptions.Cancelled
 
 ::: mr_deed.exceptions.UserInterruption
 

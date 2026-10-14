@@ -34,7 +34,9 @@ def test_response_api_model_basic_query():
         messages = [{"role": "user", "content": "test"}]
         result = model.query(messages)
 
-        assert result["extra"]["actions"] == [{"command": "echo test", "tool_call_id": "call_abc"}]
+        assert result["extra"]["actions"] == [
+            {"name": "bash", "arguments": {"command": "echo test"}, "command": "echo test", "tool_call_id": "call_abc"}
+        ]
         mock_client.responses.create.assert_called_once_with(
             model="gpt-5-mini", input=messages, tools=[BASH_TOOL_RESPONSE_API]
         )
@@ -79,7 +81,14 @@ def test_response_api_model_stateless_flattens_response():
         ]
         result = model.query(messages)
 
-        assert result["extra"]["actions"] == [{"command": "echo second", "tool_call_id": "call_2"}]
+        assert result["extra"]["actions"] == [
+            {
+                "name": "bash",
+                "arguments": {"command": "echo second"},
+                "command": "echo second",
+                "tool_call_id": "call_2",
+            }
+        ]
         # Verify that response objects are flattened and extra is stripped
         expected_input = [
             {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "first"}]},
@@ -118,8 +127,13 @@ def test_response_api_model_multiple_tool_calls():
         result = model.query(messages)
 
         assert result["extra"]["actions"] == [
-            {"command": "echo first", "tool_call_id": "call_1"},
-            {"command": "echo second", "tool_call_id": "call_2"},
+            {"name": "bash", "arguments": {"command": "echo first"}, "command": "echo first", "tool_call_id": "call_1"},
+            {
+                "name": "bash",
+                "arguments": {"command": "echo second"},
+                "command": "echo second",
+                "tool_call_id": "call_2",
+            },
         ]
 
 
@@ -246,7 +260,14 @@ def test_response_api_model_retry_on_rate_limit():
         messages = [{"role": "user", "content": "test"}]
         result = model.query(messages)
 
-        assert result["extra"]["actions"] == [{"command": "echo Success after retry", "tool_call_id": "call_retry"}]
+        assert result["extra"]["actions"] == [
+            {
+                "name": "bash",
+                "arguments": {"command": "echo Success after retry"},
+                "command": "echo Success after retry",
+                "tool_call_id": "call_retry",
+            }
+        ]
         assert call_count == 2
 
 

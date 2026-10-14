@@ -1,9 +1,10 @@
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 import litellm
 
+from mr_deed import Tool
 from mr_deed.exceptions import FormatError
 from mr_deed.models import GLOBAL_MODEL_STATS
 from mr_deed.models.litellm_model import LitellmModel, LitellmModelConfig
@@ -12,6 +13,7 @@ from mr_deed.models.utils.actions_toolcall_response import (
     finish_reason_from_responses_api,
     format_toolcall_observation_messages,
     parse_toolcall_actions_response,
+    tool_schema,
 )
 from mr_deed.models.utils.retry import retry
 
@@ -37,26 +39,26 @@ class LitellmResponseModel(LitellmModel):
                 result.append({k: v for k, v in msg.items() if k != "extra"})
         return result
 
-    def _query(self, messages: list[dict[str, str]], **kwargs):
+    def _query(self, messages: list[dict[str, str]], tools: Sequence[Tool] = (), **kwargs):
         try:
             return litellm.responses(
                 model=self.config.model_name,
                 input=messages,
-                tools=[BASH_TOOL_RESPONSE_API],
+                tools=[BASH_TOOL_RESPONSE_API, *map(tool_schema, tools)],
                 **(self.config.model_kwargs | kwargs),
             )
         except litellm.exceptions.AuthenticationError as e:
             e.message += " You can permanently set your API key with `mini-extra config set KEY VALUE`."
             raise e
 
-    def query(self, messages: list[dict[str, str]], **kwargs) -> dict:
+    def query(self, messages: list[dict[str, str]], *, tools: Sequence[Tool] = (), **kwargs) -> dict:
         for attempt in retry(logger=logger, abort_exceptions=self.abort_exceptions):
             with attempt:
-                response = self._query(self._prepare_messages_for_api(messages), **kwargs)
+                response = self._query(self._prepare_messages_for_api(messages), tools=tools, **kwargs)
         cost_output = self._calculate_cost(response)
         GLOBAL_MODEL_STATS.add(cost_output["cost"])
         try:
-            actions = self._parse_actions(response)
+            actions = self._parse_actions(response, tools)
         except FormatError as e:
             e.messages[0]["extra"].update(cost_output)
             # hasattr guard: litellm.responses() returns a pydantic object, but tests
@@ -77,11 +79,12 @@ class LitellmResponseModel(LitellmModel):
         }
         return message
 
-    def _parse_actions(self, response) -> list[dict]:
+    def _parse_actions(self, response, tools: Sequence[Tool] = ()) -> list[dict]:
         return parse_toolcall_actions_response(
             getattr(response, "output", []),
             format_error_template=self.config.format_error_template,
             template_kwargs={"finish_reason": finish_reason_from_responses_api(response)},
+            tools=tools,
         )
 
     def format_observation_messages(

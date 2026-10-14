@@ -1,4 +1,4 @@
-"""Tests for mr_deed.__init__."""
+"""Tests for mr_deed.__init__ and the import-time behavior of the CLI package mr_deed.run."""
 
 import os
 import subprocess
@@ -6,45 +6,55 @@ import sys
 
 
 def test_startup_banner_survives_non_utf8_stdout(tmp_path):
-    """Importing the package must not crash when stdout can't encode the startup banner (e.g. Windows cp1252)."""
+    """Importing the CLI package must not crash when stdout can't encode the startup banner (e.g. Windows cp1252)."""
     env = {
         **os.environ,
         "PYTHONIOENCODING": "cp1252",
         "MRDEED_SILENT_STARTUP": "",
         "MRDEED_GLOBAL_CONFIG_DIR": str(tmp_path),
     }
-    result = subprocess.run([sys.executable, "-c", "import mr_deed"], capture_output=True, text=True, env=env)
+    result = subprocess.run([sys.executable, "-c", "import mr_deed.run"], capture_output=True, text=True, env=env)
     assert result.returncode == 0, result.stderr
 
 
-def _import_and_print_env(tmp_path, var: str, extra_env: dict) -> subprocess.CompletedProcess:
+def _import_and_print_env(tmp_path, module: str, var: str, extra_env: dict) -> str:
     env = {**os.environ, "MRDEED_SILENT_STARTUP": "1", "MRDEED_GLOBAL_CONFIG_DIR": str(tmp_path / "global")}
     env.pop(var, None)
     env.update(extra_env)
-    return subprocess.run(
-        [sys.executable, "-c", f"import mr_deed, os; print(os.environ.get({var!r}))"],
+    result = subprocess.run(
+        [sys.executable, "-c", f"import {module}, os; print(os.environ.get({var!r}))"],
         capture_output=True,
         text=True,
         env=env,
         cwd=tmp_path,
     )
-
-
-def test_local_env_file_is_loaded_on_import(tmp_path):
-    """A project-local .env (e.g. copied from .env.example) is picked up on import, without needing `just`."""
-    (tmp_path / ".env").write_text("MRDEED_TEST_DOTENV_PROBE=from-local-dotenv\n")
-
-    result = _import_and_print_env(tmp_path, "MRDEED_TEST_DOTENV_PROBE", {})
-
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "from-local-dotenv"
+    return result.stdout.strip()
+
+
+def test_library_import_does_not_touch_the_environment(tmp_path):
+    """Embedding hosts import the library; neither the cwd `.env` nor the global config file may leak into os.environ."""
+    (tmp_path / ".env").write_text("MRDEED_TEST_DOTENV_PROBE=from-local-dotenv\n")
+    (tmp_path / "global").mkdir()
+    (tmp_path / "global" / ".env").write_text("MRDEED_TEST_DOTENV_PROBE=from-global-config\n")
+
+    assert _import_and_print_env(tmp_path, "mr_deed", "MRDEED_TEST_DOTENV_PROBE", {}) == "None"
+    assert _import_and_print_env(tmp_path, "mr_deed.agents.default", "MRDEED_TEST_DOTENV_PROBE", {}) == "None"
+
+
+def test_cli_package_loads_global_config_and_local_env_file(tmp_path):
+    """The CLI entry points load the global config file and a project-local .env (e.g. copied from .env.example)."""
+    (tmp_path / ".env").write_text("MRDEED_TEST_DOTENV_PROBE=from-local-dotenv\n")
+    (tmp_path / "global").mkdir()
+    (tmp_path / "global" / ".env").write_text("MRDEED_TEST_GLOBAL_PROBE=from-global-config\n")
+
+    assert _import_and_print_env(tmp_path, "mr_deed.run", "MRDEED_TEST_DOTENV_PROBE", {}) == "from-local-dotenv"
+    assert _import_and_print_env(tmp_path, "mr_deed.run", "MRDEED_TEST_GLOBAL_PROBE", {}) == "from-global-config"
 
 
 def test_local_env_file_does_not_override_the_shell_environment(tmp_path):
     """An already-exported env var must win over the project-local .env (python-dotenv's default behavior)."""
     (tmp_path / ".env").write_text("MRDEED_TEST_DOTENV_PROBE=from-local-dotenv\n")
 
-    result = _import_and_print_env(tmp_path, "MRDEED_TEST_DOTENV_PROBE", {"MRDEED_TEST_DOTENV_PROBE": "from-shell"})
-
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "from-shell"
+    probe = {"MRDEED_TEST_DOTENV_PROBE": "from-shell"}
+    assert _import_and_print_env(tmp_path, "mr_deed.run", "MRDEED_TEST_DOTENV_PROBE", probe) == "from-shell"

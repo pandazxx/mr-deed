@@ -1,9 +1,11 @@
 import json
 import logging
 import time
+from collections.abc import Sequence
 
 import requests
 
+from mr_deed import Tool
 from mr_deed.exceptions import FormatError
 from mr_deed.models import GLOBAL_MODEL_STATS
 from mr_deed.models.openrouter_model import (
@@ -18,6 +20,7 @@ from mr_deed.models.utils.actions_toolcall_response import (
     finish_reason_from_responses_api,
     format_toolcall_observation_messages,
     parse_toolcall_actions_response,
+    tool_schema,
 )
 from mr_deed.models.utils.retry import retry
 
@@ -41,7 +44,7 @@ class OpenRouterResponseModel(OpenRouterModel):
         self.config = OpenRouterResponseModelConfig(**kwargs)
         self._api_url = "https://openrouter.ai/api/v1/responses"
 
-    def _query(self, messages: list[dict[str, str]], **kwargs):
+    def _query(self, messages: list[dict[str, str]], tools: Sequence[Tool] = (), **kwargs):
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
@@ -49,7 +52,7 @@ class OpenRouterResponseModel(OpenRouterModel):
         payload = {
             "model": self.config.model_name,
             "input": messages,
-            "tools": [BASH_TOOL_RESPONSE_API],
+            "tools": [BASH_TOOL_RESPONSE_API, *map(tool_schema, tools)],
             **(self.config.model_kwargs | kwargs),
         }
         try:
@@ -82,14 +85,14 @@ class OpenRouterResponseModel(OpenRouterModel):
                 result.append({k: v for k, v in msg.items() if k != "extra"})
         return result
 
-    def query(self, messages: list[dict[str, str]], **kwargs) -> dict:
+    def query(self, messages: list[dict[str, str]], *, tools: Sequence[Tool] = (), **kwargs) -> dict:
         for attempt in retry(logger=logger, abort_exceptions=self.abort_exceptions):
             with attempt:
-                response = self._query(self._prepare_messages_for_api(messages), **kwargs)
+                response = self._query(self._prepare_messages_for_api(messages), tools=tools, **kwargs)
         cost_output = self._calculate_cost(response)
         GLOBAL_MODEL_STATS.add(cost_output["cost"])
         try:
-            actions = self._parse_actions(response)
+            actions = self._parse_actions(response, tools)
         except FormatError as e:
             e.messages[0]["extra"].update(cost_output)
             e.messages[0]["extra"]["response"] = dict(response)
@@ -102,11 +105,12 @@ class OpenRouterResponseModel(OpenRouterModel):
         }
         return message
 
-    def _parse_actions(self, response: dict) -> list[dict]:
+    def _parse_actions(self, response: dict, tools: Sequence[Tool] = ()) -> list[dict]:
         return parse_toolcall_actions_response(
             response.get("output", []),
             format_error_template=self.config.format_error_template,
             template_kwargs={"finish_reason": finish_reason_from_responses_api(response)},
+            tools=tools,
         )
 
     def format_message(self, **kwargs) -> dict:

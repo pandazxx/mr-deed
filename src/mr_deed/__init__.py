@@ -6,17 +6,20 @@ This file provides:
 - Protocols for the core components of mr-deed.
   By the magic of protocols & duck typing, you can pretty much ignore them,
   unless you want the static type checking.
+
+Importing this package has no side effects on `os.environ`, stdout or the file system; the CLI entry
+points (`mr_deed.run`) create the global config directory, load the config file and print the banner.
 """
 
-__version__ = "2.4.6"
+__version__ = "0.1.0"
 
 import os
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-import dotenv
 from platformdirs import user_config_dir
-from rich.console import Console
 
 from mr_deed.utils.log import logger
 
@@ -24,17 +27,21 @@ package_dir = Path(__file__).resolve().parent
 
 
 global_config_dir = Path(os.getenv("MRDEED_GLOBAL_CONFIG_DIR") or user_config_dir("mr-deed"))
-global_config_dir.mkdir(parents=True, exist_ok=True)
 global_config_file = Path(global_config_dir) / ".env"
 
-if not os.getenv("MRDEED_SILENT_STARTUP"):
-    Console().print(
-        f"This is [bold green]mr-deed[/bold green] version [bold green]{__version__}[/bold green].\n"
-        f"Check the [bold red]v2 migration guide[/] at [bold red]https://klieret.short.gy/mini-v2-migration[/]\n"
-        f"Loading global config from [bold green]'{global_config_file}'[/bold green]",
-    )
-dotenv.load_dotenv(dotenv_path=global_config_file)
-dotenv.load_dotenv()  # project-local .env (e.g. from .env.example), if any; never overrides already-set vars
+
+@dataclass
+class Tool:
+    """A host tool offered to the LM alongside `bash` (tool-call models only, see `DefaultAgent`).
+    The agent calls `handler` with the tool call's arguments; the returned dict (`output`, `returncode`,
+    optionally `exception_info`) becomes a regular observation message.
+    """
+
+    name: str
+    description: str
+    parameters: dict[str, Any]
+    """JSON schema of the arguments."""
+    handler: Callable[[dict], dict]
 
 
 # === Protocols ===
@@ -46,7 +53,7 @@ class Model(Protocol):
 
     config: Any
 
-    def query(self, messages: list[dict[str, str]], **kwargs) -> dict: ...
+    def query(self, messages: list[dict[str, str]], *, tools: Sequence[Tool] = (), **kwargs) -> dict: ...
 
     def format_message(self, **kwargs) -> dict: ...
 
@@ -60,7 +67,8 @@ class Model(Protocol):
 
 
 class Environment(Protocol):
-    """Protocol for execution environments."""
+    """Protocol for execution environments. Environments may additionally offer `interrupt()`
+    to kill the command currently executing (see `LocalEnvironment` and `DefaultAgent.cancel`)."""
 
     config: Any
 
@@ -78,6 +86,10 @@ class Agent(Protocol):
 
     def run(self, task: str, **kwargs) -> dict: ...
 
+    def continue_run(self, task: str, **kwargs) -> dict: ...
+
+    def cancel(self) -> None: ...
+
     def save(self, path: Path | None, *extra_dicts) -> dict: ...
 
 
@@ -85,6 +97,7 @@ __all__ = [
     "Agent",
     "Model",
     "Environment",
+    "Tool",
     "package_dir",
     "__version__",
     "global_config_file",

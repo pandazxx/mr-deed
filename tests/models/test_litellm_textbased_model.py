@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 import litellm
 import pytest
 
+from mr_deed import Tool
 from mr_deed.models import GLOBAL_MODEL_STATS
 from mr_deed.models.litellm_textbased_model import LitellmTextbasedModel
 
@@ -124,3 +125,10 @@ def test_litellm_model_cost_validation_zero_cost():
 
             assert "Cost must be > 0.0, got 0.0" in str(exc_info.value)
             assert "MRDEED_COST_TRACKING='ignore_errors'" in str(exc_info.value)
+
+
+def test_host_tools_are_rejected_without_querying_the_api():
+    tool = Tool("add", "Add", {"type": "object", "properties": {}}, lambda args: {"output": ""})
+    with patch("litellm.completion") as mock_completion, pytest.raises(ValueError, match="tool-call model"):
+        LitellmTextbasedModel(model_name="gpt-4").query([{"role": "user", "content": "x"}], tools=[tool])
+    mock_completion.assert_not_called()

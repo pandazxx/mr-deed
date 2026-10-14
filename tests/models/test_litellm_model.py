@@ -2,9 +2,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from mr_deed import Tool
 from mr_deed.exceptions import FormatError
 from mr_deed.models.litellm_model import LitellmModel, LitellmModelConfig
-from mr_deed.models.utils.actions_toolcall import BASH_TOOL
+from mr_deed.models.utils.actions_toolcall import BASH_TOOL, tool_schema
 
 
 class TestLitellmModelConfig:
@@ -50,7 +51,26 @@ class TestLitellmModel:
 
         model = LitellmModel(model_name="gpt-4")
         result = model.query([{"role": "user", "content": "list files"}])
-        assert result["extra"]["actions"] == [{"command": "ls -la", "tool_call_id": "call_abc"}]
+        assert result["extra"]["actions"] == [
+            {"name": "bash", "arguments": {"command": "ls -la"}, "command": "ls -la", "tool_call_id": "call_abc"}
+        ]
+
+    @patch("mr_deed.models.litellm_model.litellm.completion")
+    @patch("mr_deed.models.litellm_model.litellm.cost_calculator.completion_cost")
+    def test_query_sends_and_parses_host_tools(self, mock_cost, mock_completion):
+        tool = Tool(
+            "add", "Add", {"type": "object", "properties": {"a": {"type": "integer"}}}, lambda args: {"output": ""}
+        )
+        tool_call = MagicMock()
+        tool_call.function.name = "add"
+        tool_call.function.arguments = '{"a": 1}'
+        tool_call.id = "call_1"
+        mock_completion.return_value = _mock_litellm_response([tool_call])
+        mock_cost.return_value = 0.001
+
+        result = LitellmModel(model_name="gpt-4").query([{"role": "user", "content": "add"}], tools=[tool])
+        assert mock_completion.call_args.kwargs["tools"] == [BASH_TOOL, tool_schema(tool)]
+        assert result["extra"]["actions"] == [{"name": "add", "arguments": {"a": 1}, "tool_call_id": "call_1"}]
 
     @patch("mr_deed.models.litellm_model.litellm.completion")
     @patch("mr_deed.models.litellm_model.litellm.cost_calculator.completion_cost")

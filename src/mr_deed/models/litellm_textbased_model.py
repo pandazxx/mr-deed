@@ -1,5 +1,8 @@
+from collections.abc import Sequence
+
 import litellm
 
+from mr_deed import Tool
 from mr_deed.models.litellm_model import LitellmModel, LitellmModelConfig
 from mr_deed.models.utils.actions_text import format_observation_messages, parse_regex_actions
 
@@ -17,7 +20,12 @@ class LitellmTextbasedModel(LitellmModel):
     def __init__(self, **kwargs):
         super().__init__(config_class=LitellmTextbasedModelConfig, **kwargs)
 
-    def _query(self, messages: list[dict[str, str]], **kwargs):
+    def query(self, messages: list[dict[str, str]], *, tools: Sequence[Tool] = (), **kwargs) -> dict:
+        if tools:
+            raise ValueError("Host tools require a tool-call model; text-based models only support bash.")
+        return super().query(messages, **kwargs)
+
+    def _query(self, messages: list[dict[str, str]], tools: Sequence[Tool] = (), **kwargs):
         try:
             return litellm.completion(
                 model=self.config.model_name, messages=messages, **(self.config.model_kwargs | kwargs)
@@ -26,7 +34,7 @@ class LitellmTextbasedModel(LitellmModel):
             e.message += " You can permanently set your API key with `mini-extra config set KEY VALUE`."
             raise e
 
-    def _parse_actions(self, response: dict) -> list[dict]:
+    def _parse_actions(self, response: dict, tools: Sequence[Tool] = ()) -> list[dict]:
         """Parse actions from the model response. Raises FormatError if not exactly one action."""
         content = response.choices[0].message.content or ""
         return parse_regex_actions(

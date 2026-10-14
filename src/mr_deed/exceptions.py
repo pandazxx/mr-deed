@@ -18,6 +18,10 @@ class TimeExceeded(LimitsExceeded):
     """Raised when the agent has exceeded its wall-clock time limit."""
 
 
+class Cancelled(InterruptAgentFlow):
+    """Raised when the run was cancelled via the agent's cancel event."""
+
+
 class UserInterruption(InterruptAgentFlow):
     """Raised when the user interrupts the agent."""
 

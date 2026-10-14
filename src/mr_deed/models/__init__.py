@@ -11,7 +11,9 @@ from mr_deed import Model
 
 
 class GlobalModelStats:
-    """Global model statistics tracker with optional limits."""
+    """Thread-safe process-wide model statistics with optional limits (`MRDEED_GLOBAL_COST_LIMIT`,
+    `MRDEED_GLOBAL_CALL_LIMIT`). Per-agent limits (`AgentConfig.cost_limit`, `step_limit`) are enforced by
+    each agent's own counters and never depend on other agents' spend."""
 
     def __init__(self):
         self._cost = 0.0
@@ -27,8 +29,8 @@ class GlobalModelStats:
         with self._lock:
             self._cost += cost
             self._n_calls += 1
-        if 0 < self.cost_limit < self._cost or 0 < self.call_limit < self._n_calls + 1:
-            raise RuntimeError(f"Global cost/call limit exceeded: ${self._cost:.4f} / {self._n_calls}")
+            if 0 < self.cost_limit < self._cost or 0 < self.call_limit < self._n_calls + 1:
+                raise RuntimeError(f"Global cost/call limit exceeded: ${self._cost:.4f} / {self._n_calls}")
 
     @property
     def cost(self) -> float:

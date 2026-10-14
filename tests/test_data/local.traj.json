@@ -21,6 +21,6 @@
   },
   {
     "role": "user",
-    "content": ""
+    "content": "<returncode>0</returncode>\n<output>\n</output>"
   }
 ]
